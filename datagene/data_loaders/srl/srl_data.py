@@ -3,11 +3,11 @@ import json
 from tqdm import tqdm
 
 
-class SrlDataset:
-    def __init__(self, dataset_path, dataset_fn):
+class SrlData:
+    def __init__(self, dataset_dir, dataset_fn):
         self.data = []
         
-        dataset_full_path = os.path.join(dataset_path, dataset_fn)
+        dataset_full_path = os.path.join(dataset_dir, dataset_fn)
         if not os.path.isfile(dataset_full_path):
             raise FileNotFoundError(f"{dataset_full_path} dataset file could not be found")
         
