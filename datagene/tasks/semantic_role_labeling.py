@@ -85,8 +85,6 @@ class SRL(TaskBase):
                 if self.use_cuda:
                     token_tensor, token_type_ids_tensor, label_tensor = token_tensor.cuda(), token_type_ids_tensor.cuda(), label_tensor.cuda()
                 
-                self.optimizer.zero_grad()
-                
                 loss, pred_tags = self.model(
                     token_tensor, 
                     token_type_ids=token_type_ids_tensor,
