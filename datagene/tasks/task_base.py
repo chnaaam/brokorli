@@ -20,6 +20,8 @@ class TaskBase(metaclass=ABCMeta):
         self.use_cuda = False
         if "use_cuda" in parameters:
             self.use_cuda = parameters["use_cuda"]
+            
+        self.model_hub_path = parameters["model_hub_path"]
            
             
     def build(self, layer_parameters):
