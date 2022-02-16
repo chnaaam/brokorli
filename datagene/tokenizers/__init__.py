@@ -1,6 +1,5 @@
 from .tokenization_kobert import KoBertTokenizer
 
-
-TOKENIZERS = {
+TOKENIZER_LIST = {
     "word-piece": KoBertTokenizer.from_pretrained("monologg/kobert")
 }

@@ -1,3 +1,6 @@
+__pycache__/
 .vscode
-data
-venv
+cache/
+data/
+venv/
+model/
