@@ -1,3 +1,4 @@
+import os
 import torch
 from tqdm import tqdm
 
@@ -33,6 +34,7 @@ class SRL(TaskBase):
         
     def train(self):
         
+        max_score = 0
         if self.use_cuda:
             self.model = self.model.cuda()
         
@@ -59,13 +61,18 @@ class SRL(TaskBase):
                 loss.backward()
                 self.optimizer.step()
                 train_loss.append(loss.item())
-                break
                 
-            valid_loss, valid_f1_score = self.valid()
+            avg_train_loss = sum(train_loss) / len(train_loss)
+            avg_valid_loss, avg_valid_f1_score = self.valid()
             
-            print(f"Epoch : {epoch}\tTrain Loss : {sum(train_loss) / len(train_loss)}\tValid Loss : {valid_loss}\tValid F1 Score : {valid_f1_score}")
+            print(f"Epoch : {epoch}\tTrain Loss : {avg_train_loss}\tValid Loss : {avg_valid_loss}\tValid F1 Score : {avg_valid_f1_score}")
             
-    
+            if max_score < avg_valid_f1_score:
+                torch.save(
+                    self.model.state_dict(),
+                    os.path.join(self.model_hub_path, f"srl-score-{avg_valid_f1_score:.2f}-e{epoch}.mdl")
+                )
+                
     def valid(self):
         valid_loss, valid_f1_score = [], []
         

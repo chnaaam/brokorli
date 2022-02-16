@@ -71,16 +71,16 @@ class DataGene:
         valid_dataset = DATA_LIST[task_name]["dataset"](
             tokenizer=tokenizer,
             data_list=valid_data_list, 
-            cache_dir=self.cfg.path.cache,
-            vocab_dir=self.cfg.path.vocab,
+            cache_dir=os.path.join(self.cfg.path.root, self.cfg.path.cache),
+            vocab_dir=os.path.join(self.cfg.path.root, self.cfg.path.vocab),
             dataset_type="valid",
             max_seq_len=self.cfg.parameters.max_seq_len)
         
         test_dataset = DATA_LIST[task_name]["dataset"](
             tokenizer=tokenizer,
             data_list=test_data_list, 
-            cache_dir=self.cfg.path.cache,
-            vocab_dir=self.cfg.path.vocab,
+            cache_dir=os.path.join(self.cfg.path.root, self.cfg.path.cache),
+            vocab_dir=os.path.join(self.cfg.path.root, self.cfg.path.vocab),
             dataset_type="test",
             max_seq_len=self.cfg.parameters.max_seq_len)
         
@@ -99,6 +99,7 @@ class DataGene:
             criterion=CRITERION_LIST[self.cfg.parameters.criterion],
             
             use_cuda=self.cfg.use_cuda,
+            model_hub_path=os.path.join(self.cfg.path.root, self.cfg.path.model),
             
             # Optional Parameters
             vocab_size=len(train_dataset.tokenizer),
