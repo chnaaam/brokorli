@@ -7,7 +7,7 @@ from .task_base import TaskBase
 from datagene.metrics.f1_score import calculate_f1_score
 
 class SRL(TaskBase):
-    
+
     def __init__(self, **parameters):
         
         # Set common parameters for TaskBase
@@ -30,7 +30,7 @@ class SRL(TaskBase):
             }
         }
         
-        super().build(layer_parameters=LAYER_INIT_PARAMETERS)
+        self.build(layer_parameters=LAYER_INIT_PARAMETERS)
         
     def train(self):
         
@@ -40,9 +40,10 @@ class SRL(TaskBase):
         
         for epoch in range(int(self.cfg.epochs)):
             self.model.train()
-            train_loss = []
+            train_losses = []
+            avg_train_loss = 0
             
-            for data in tqdm(self.train_data_loader, desc=f"Train Epoch : {epoch}"):
+            for data in tqdm(self.train_data_loader, desc=f"[Training] Epoch : {epoch}, Average Loss : {avg_train_loss}"):
                 token_tensor, token_type_ids_tensor, label_tensor = data
                 
                 if self.use_cuda:
@@ -60,26 +61,24 @@ class SRL(TaskBase):
                 
                 loss.backward()
                 self.optimizer.step()
-                train_loss.append(loss.item())
+                train_losses.append(loss.item())
                 
-            avg_train_loss = sum(train_loss) / len(train_loss)
+            avg_train_loss = sum(train_losses) / len(train_losses)
             avg_valid_loss, avg_valid_f1_score = self.valid()
             
             print(f"Epoch : {epoch}\tTrain Loss : {avg_train_loss}\tValid Loss : {avg_valid_loss}\tValid F1 Score : {avg_valid_f1_score}")
             
             if max_score < avg_valid_f1_score:
-                torch.save(
-                    self.model.state_dict(),
-                    os.path.join(self.model_hub_path, f"srl-score-{avg_valid_f1_score:.2f}-e{epoch}.mdl")
-                )
+                self.save_model(path=os.path.join(self.model_hub_path, f"srl-score-{avg_valid_f1_score * 100:.2f}-e{epoch}.mdl"))
                 
     def valid(self):
-        valid_loss, valid_f1_score = [], []
-        
         self.model.eval()
         
         with torch.no_grad():
-            for data in tqdm(self.valid_data_loader, desc=f"Validation : "):
+            valid_losses, valid_f1_scores = [], []
+            avg_valid_loss, avg_valid_f1_score = 0, 0
+            
+            for data in tqdm(self.valid_data_loader, desc=f"[Validation] Average Loss : {avg_valid_loss}\tAverage Score : {avg_valid_f1_score}"):
                 token_tensor, token_type_ids_tensor, label_tensor = data
                 
                 if self.use_cuda:
@@ -93,14 +92,17 @@ class SRL(TaskBase):
                     crf_masks=(token_tensor != self.token_pad_id)
                 )
                 
-                valid_loss.append(loss.item())
+                valid_losses.append(loss.item())
                 true_y, pred_y = self.decode(label_tensor, pred_tags)
                 
                 score = calculate_f1_score(true_y, pred_y)
                         
-                valid_f1_score.append(score)        
+                valid_f1_scores.append(score)
                 
-            return sum(valid_loss) / len(valid_loss), sum(valid_f1_score) / len(valid_f1_score)
+                avg_valid_loss = sum(valid_losses) / len(valid_losses)    
+                avg_valid_f1_score = sum(valid_f1_scores) / len(valid_f1_scores)    
+                
+            return avg_valid_loss, avg_valid_f1_score
     
     def test(self):
         pass

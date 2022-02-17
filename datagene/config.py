@@ -5,7 +5,7 @@ import yaml
 class ConfigBase:    
     """
     ConfigBase
-    YAML 파일을 클래스화 합니다.
+    Change the YAML data to class
     """
     
     def __init__(self, data):
@@ -18,14 +18,14 @@ class ConfigBase:
 
 def get_data_gene_config(cfg_path, cfg_fn):
     """
-    지정된 위치의 Configuration 파일을 불러와서 클래스화 한 후, 리턴 합니다.
+    Load configuration file
 
     Args:
-        cfg_path (str): Configuration 파일이 있는 디렉터리
-        cfg_fn (str): Configuration 파일 이름
+        cfg_path (str): Configuration directory
+        cfg_fn (str): Configuration file name
 
     Returns:
-        클래스화된 Configuration 
+        ConfigBase Class
         
     Example:
         cfg = get_data_gene_config(config_path="./", config_file="datagene.cfg")

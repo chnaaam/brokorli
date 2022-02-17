@@ -2,6 +2,10 @@ import torch
 import torch.nn as nn
 
 class ModelBuilder(nn.Module):
+    """
+    ModelBuilder는 Configuration 파일에 입력한 모델 이름을 기반으로 모델을 만들어 줍니다.
+    """
+    
     def __init__(self, layer_list, layer_parameters):
         super().__init__()
         
