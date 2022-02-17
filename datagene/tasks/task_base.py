@@ -45,7 +45,6 @@ class TaskBase(metaclass=ABCMeta):
         # Hub Path for Trained Model
         self.model_hub_path = parameters["model_hub_path"]
            
-            
     def build(self, layer_parameters):
         """
         모델 및 Optimizer를 설정하는 함수로, Configuration 파일 내 모델 이름에 따라 layer_paremeter의 값을 설정해주면 됩니다.
