@@ -67,7 +67,7 @@ class TaskBase(metaclass=ABCMeta):
         self.scheduler = self.scheduler_func(
             optimizer=self.optimizer,
             
-            # TODO : Fix hard coding for lambda scheduler
+            # TODO : Please edit the parameter. I wrote lambda scheduler hard code for the current version
             lr_lambda = lambda epoch: 0.95 ** self.cfg.epochs
         )
         
