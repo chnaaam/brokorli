@@ -5,6 +5,7 @@ import torch
 
 from datagene.models import ModelBuilder
 
+
 class TaskBase(metaclass=ABCMeta):
     """
     Task에 대한 추상 클래스 입니다. 
@@ -41,6 +42,10 @@ class TaskBase(metaclass=ABCMeta):
         if "use_cuda" in parameters:
             self.use_cuda = parameters["use_cuda"]
             
+        # Use deep speed library
+        self.use_deepspeed_lib = parameters["use_deepspeed_lib"]
+        
+        # Hub Path for Trained Model
         self.model_hub_path = parameters["model_hub_path"]
            
             
@@ -63,13 +68,64 @@ class TaskBase(metaclass=ABCMeta):
         super().build(layer_parameters=layer_parameters)
         """
         self.model = ModelBuilder(layer_list=self.layer_list, layer_parameters=layer_parameters)
-        self.optimizer = self.optimizer_func(self.model.parameters(), lr=float(self.cfg.learning_rate))
-        self.scheduler = self.scheduler_func(
-            optimizer=self.optimizer,
+        
+        if not self.use_deepspeed_lib:
             
-            # TODO : Please edit the parameter. I wrote lambda scheduler hard code for the current version
-            lr_lambda = lambda epoch: 0.95 ** self.cfg.epochs
-        )
+            # TODO : Please edit the "kobert" code. I wrote lambda scheduler hard code for the current version
+            # param_optimizer = list(self.model.layers["kobert"].named_parameters())
+            # no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
+            # optimizer_grouped_parameters = [
+            #     {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': self.cfg.weight_decay},
+            #     {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
+            # ]
+            
+            self.optimizer = self.optimizer_func(
+                self.model.parameters(), 
+                # optimizer_grouped_parameters,
+                lr=float(self.cfg.learning_rate)
+            )
+            
+            # TODO : Please edit the parameter. I wrote lambda scheduler hard code for the current version            
+            self.scheduler = self.scheduler_func(
+                optimizer=self.optimizer,
+                lr_lambda = lambda epoch: 0.95 ** self.cfg.epochs
+            )
+        
+        else:
+            import deepspeed
+            
+            config = {
+                "train_batch_size": self.cfg.batch_size,
+                "fp16": {
+                    "enabled": self.cfg.fp16,
+                },
+                "zero_optimization": {
+                    "stage": 2,
+                    "contiguous_gradients": True,
+                    "overlap_comm": True,
+                    "offload_optimizer": {
+                        "device": "cpu",
+                        "pin_memory": True,
+                        "fast_init": True
+                    },
+                },
+                "optimizer": {
+                    "type": "AdamW",
+                    "params": {
+                        "lr": float(self.cfg.learning_rate),
+                        "betas": [
+                            0.9,
+                            0.999
+                        ],
+                        "eps": 1e-8
+                    }
+                },
+            }
+            
+            self.model, self.optimizer, _, _ = deepspeed.initialize(
+                model=self.model,
+                config_params=config,
+                model_parameters=self.model.parameters())
         
         # If "use_cuda" parameter of configuration file is True, model is trained using gpu
         if self.use_cuda:
