@@ -43,7 +43,10 @@ class SRL(TaskBase):
             train_losses = []
             avg_train_loss = 0
             
-            for data in tqdm(self.train_data_loader, desc=f"[Training] Epoch : {epoch}, Average Loss : {avg_train_loss}"):
+            progress_bar = tqdm(self.train_data_loader)
+            for data in progress_bar:
+                progress_bar.set_description(f"[Training] Epoch : {epoch}, Avg Loss : {avg_train_loss:.4f}")
+                
                 token_tensor, token_type_ids_tensor, label_tensor = data
                 
                 if self.use_cuda:
@@ -63,10 +66,13 @@ class SRL(TaskBase):
                 self.optimizer.step()
                 train_losses.append(loss.item())
                 
-            avg_train_loss = sum(train_losses) / len(train_losses)
+                avg_train_loss = sum(train_losses) / len(train_losses)
+            
+            self.scheduler.step()
+            
             avg_valid_loss, avg_valid_f1_score = self.valid()
             
-            print(f"Epoch : {epoch}\tTrain Loss : {avg_train_loss}\tValid Loss : {avg_valid_loss}\tValid F1 Score : {avg_valid_f1_score}")
+            print(f"Epoch : {epoch}\tTrain Loss : {avg_train_loss:.4f}\tValid Loss : {avg_valid_loss:.4f}\tValid F1 Score : {avg_valid_f1_score * 100:.2f}")
             
             if max_score < avg_valid_f1_score:
                 self.save_model(path=os.path.join(self.model_hub_path, f"srl-score-{avg_valid_f1_score * 100:.2f}-e{epoch}.mdl"))
@@ -78,7 +84,10 @@ class SRL(TaskBase):
             valid_losses, valid_f1_scores = [], []
             avg_valid_loss, avg_valid_f1_score = 0, 0
             
-            for data in tqdm(self.valid_data_loader, desc=f"[Validation] Average Loss : {avg_valid_loss}\tAverage Score : {avg_valid_f1_score}"):
+            progress_bar = tqdm(self.valid_data_loader)
+            for data in progress_bar:
+                progress_bar.set_description(f"[Validation] Avg Loss : {avg_valid_loss:.4f} Avg Score : {avg_valid_f1_score * 100:.2f}")
+                
                 token_tensor, token_type_ids_tensor, label_tensor = data
                 
                 if self.use_cuda:
