@@ -69,63 +69,25 @@ class TaskBase(metaclass=ABCMeta):
         """
         self.model = ModelBuilder(layer_list=self.layer_list, layer_parameters=layer_parameters)
         
-        if not self.use_deepspeed_lib:
-            
-            # TODO : Please edit the "kobert" code. I wrote lambda scheduler hard code for the current version
-            # param_optimizer = list(self.model.layers["kobert"].named_parameters())
-            # no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
-            # optimizer_grouped_parameters = [
-            #     {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': self.cfg.weight_decay},
-            #     {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
-            # ]
-            
-            self.optimizer = self.optimizer_func(
-                self.model.parameters(), 
-                # optimizer_grouped_parameters,
-                lr=float(self.cfg.learning_rate)
-            )
-            
-            # TODO : Please edit the parameter. I wrote lambda scheduler hard code for the current version            
-            self.scheduler = self.scheduler_func(
-                optimizer=self.optimizer,
-                lr_lambda = lambda epoch: 0.95 ** self.cfg.epochs
-            )
+        # TODO : Please edit the "kobert" code. I wrote lambda scheduler hard code for the current version
+        # param_optimizer = list(self.model.layers["kobert"].named_parameters())
+        # no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
+        # optimizer_grouped_parameters = [
+        #     {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': self.cfg.weight_decay},
+        #     {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
+        # ]
         
-        else:
-            import deepspeed
-            
-            config = {
-                "train_batch_size": self.cfg.batch_size,
-                "fp16": {
-                    "enabled": self.cfg.fp16,
-                },
-                "zero_optimization": {
-                    "stage": 2,
-                    "contiguous_gradients": True,
-                    "overlap_comm": True,
-                    "offload_optimizer": {
-                        "device": "cpu",
-                        "pin_memory": True,
-                        "fast_init": True
-                    },
-                },
-                "optimizer": {
-                    "type": "AdamW",
-                    "params": {
-                        "lr": float(self.cfg.learning_rate),
-                        "betas": [
-                            0.9,
-                            0.999
-                        ],
-                        "eps": 1e-8
-                    }
-                },
-            }
-            
-            self.model, self.optimizer, _, _ = deepspeed.initialize(
-                model=self.model,
-                config_params=config,
-                model_parameters=self.model.parameters())
+        self.optimizer = self.optimizer_func(
+            self.model.parameters(), 
+            # optimizer_grouped_parameters,
+            lr=float(self.cfg.learning_rate)
+        )
+        
+        # TODO : Please edit the parameter. I wrote lambda scheduler hard code for the current version            
+        self.scheduler = self.scheduler_func(
+            optimizer=self.optimizer,
+            lr_lambda = lambda epoch: 0.95 ** self.cfg.epochs
+        )
         
         # If "use_cuda" parameter of configuration file is True, model is trained using gpu
         if self.use_cuda:
