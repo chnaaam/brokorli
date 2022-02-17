@@ -9,15 +9,8 @@ from .data_loaders import DATA_LIST
 from .tasks import TASK_LIST
 from .models import LAYER_LIST
 from .tokenizers import TOKENIZER_LIST
+from .functions import CRITERION_LIST, OPTIMIZER_LIST, SCHEDULER_LIST
 
-OPTIMIZER_LIST = {
-    "adam": optim.Adam,
-    "adamw": optim.AdamW
-}
-
-CRITERION_LIST = {
-    "cross-entropy": nn.CrossEntropyLoss
-}
 
 class DataGene:
     
@@ -55,7 +48,7 @@ class DataGene:
         train_data_list, valid_data_list, test_data_list = None, None, None
         
         if not os.path.exists(train_cache_path) or not os.path.exists(valid_cache_path) or not os.path.exists(test_cache_path):
-            train_data_list, valid_data_list, test_data_list = self.build_dataset(task_name=task_name, task_cfg=task_cfg)
+            train_data_list, valid_data_list, test_data_list = self.load_dataset(task_name=task_name, task_cfg=task_cfg)
         
             if not train_data_list and not valid_data_list and not test_data_list:
                 raise ValueError("Dataset is empty")
@@ -97,7 +90,7 @@ class DataGene:
             },
             optimizer=OPTIMIZER_LIST[self.cfg.parameters.optimizer],
             criterion=CRITERION_LIST[self.cfg.parameters.criterion],
-            
+            scheduler=SCHEDULER_LIST[self.cfg.parameters.scheduler],
             use_cuda=self.cfg.use_cuda,
             model_hub_path=os.path.join(self.cfg.path.root, self.cfg.path.model),
             
@@ -112,7 +105,7 @@ class DataGene:
         
         task.train()
     
-    def build_dataset(self, task_name, task_cfg):
+    def load_dataset(self, task_name, task_cfg):
         
         # Build dataset
         if "data" in task_cfg.dataset.__dict__:

@@ -13,6 +13,7 @@ class SrlDataset(Dataset):
     def __init__(self, tokenizer, data_list, cache_dir, vocab_dir, dataset_type="train", max_seq_len=256):
         super().__init__()
         
+        # Definition of special tokens
         self.LABEL_BEGIN_TOKEN = "<BEGIN>"
         self.LABEL_END_TOKEN = "<END>"   
         self.LABEL_PAD_TOKEN = "<PAD>"
@@ -25,8 +26,8 @@ class SrlDataset(Dataset):
             "pad": self.LABEL_PAD_TOKEN
         }
     
+        # add predicate tokens into tokenizer
         self.tokenizer = tokenizer
-        
         self.tokenizer.add_special_tokens({"additional_special_tokens":[
             self.START_OF_PREDICATE_SPECIAL_TOKEN,
             self.END_OF_PREDICATE_SPECIAL_TOKEN
@@ -38,6 +39,8 @@ class SrlDataset(Dataset):
         
         cache_path = os.path.join(cache_dir, f"srl-{dataset_type}-data.cache")
         
+        # we use cache file for improving data loading speed when cache file is existed in cache directory.
+        # But file is not existed, then build dataset and save into cache file
         if not os.path.isfile(cache_path):
             
             for data in tqdm(data_list, desc=f"Load {dataset_type} data"):
@@ -94,7 +97,8 @@ class SrlDataset(Dataset):
                         
                 except IndexError:
                     pass
-                
+            
+            # Save cache file
             with open(cache_path, "wb") as fp:
                 pickle.dump({"tokens": self.tokens, "labels": self.labels}, fp)
                     
