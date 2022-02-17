@@ -92,6 +92,7 @@ class DataGene:
             criterion=CRITERION_LIST[self.cfg.parameters.criterion],
             scheduler=SCHEDULER_LIST[self.cfg.parameters.scheduler],
             use_cuda=self.cfg.use_cuda,
+            use_deepspeed_lib=self.cfg.use_deepspeed_lib,
             model_hub_path=os.path.join(self.cfg.path.root, self.cfg.path.model),
             
             # Optional Parameters
