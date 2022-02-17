@@ -62,13 +62,13 @@ class SRL(TaskBase):
                     crf_masks=(token_tensor != self.token_pad_id)
                 )
                 
+                
                 loss.backward()
                 self.optimizer.step()
+                           
                 train_losses.append(loss.item())
                 
                 avg_train_loss = sum(train_losses) / len(train_losses)
-            
-            self.scheduler.step()
             
             avg_valid_loss, avg_valid_f1_score = self.valid()
             

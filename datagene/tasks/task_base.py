@@ -5,6 +5,7 @@ import torch
 
 from datagene.models import ModelBuilder
 
+
 class TaskBase(metaclass=ABCMeta):
     """
     Task에 대한 추상 클래스 입니다. 
@@ -40,7 +41,8 @@ class TaskBase(metaclass=ABCMeta):
         self.use_cuda = False
         if "use_cuda" in parameters:
             self.use_cuda = parameters["use_cuda"]
-            
+                    
+        # Hub Path for Trained Model
         self.model_hub_path = parameters["model_hub_path"]
            
             
@@ -63,11 +65,16 @@ class TaskBase(metaclass=ABCMeta):
         super().build(layer_parameters=layer_parameters)
         """
         self.model = ModelBuilder(layer_list=self.layer_list, layer_parameters=layer_parameters)
-        self.optimizer = self.optimizer_func(self.model.parameters(), lr=float(self.cfg.learning_rate))
+        
+        self.optimizer = self.optimizer_func(
+            self.model.parameters(), 
+            # optimizer_grouped_parameters,
+            lr=float(self.cfg.learning_rate)
+        )
+            
+        # TODO : Please edit the parameter. I wrote lambda scheduler hard code for the current version            
         self.scheduler = self.scheduler_func(
             optimizer=self.optimizer,
-            
-            # TODO : Please edit the parameter. I wrote lambda scheduler hard code for the current version
             lr_lambda = lambda epoch: 0.95 ** self.cfg.epochs
         )
         
