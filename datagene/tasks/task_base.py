@@ -63,12 +63,27 @@ class TaskBase(metaclass=ABCMeta):
         super().build(layer_parameters=layer_parameters)
         """
         self.model = ModelBuilder(layer_list=self.layer_list, layer_parameters=layer_parameters)
-        self.optimizer = self.optimizer_func(self.model.parameters(), lr=float(self.cfg.learning_rate))
+        
+        param_optimizer = list(self.model.parameters())
+        no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
+        optimizer_grouped_parameters = [
+            {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': self.cfg.parameters.weight_decay},
+            {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
+        ]
+        
+        self.optimizer = self.optimizer_func(
+            # self.model.parameters(), 
+            optimizer_grouped_parameters,
+            lr=float(self.cfg.learning_rate)
+        )
+        
+        # TODO : Please edit the parameter. I wrote lambda scheduler hard code for the current version
+        lambda1 = lambda epoch: self.cfg.epochs // 2
+        lambda2 = lambda epoch: 0.95 ** self.cfg.epochs
+        
         self.scheduler = self.scheduler_func(
             optimizer=self.optimizer,
-            
-            # TODO : Please edit the parameter. I wrote lambda scheduler hard code for the current version
-            lr_lambda = lambda epoch: 0.95 ** self.cfg.epochs
+            lr_lambda = [lambda1, lambda2]
         )
         
         # If "use_cuda" parameter of configuration file is True, model is trained using gpu
