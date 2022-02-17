@@ -41,10 +41,7 @@ class TaskBase(metaclass=ABCMeta):
         self.use_cuda = False
         if "use_cuda" in parameters:
             self.use_cuda = parameters["use_cuda"]
-            
-        # Use deep speed library
-        self.use_deepspeed_lib = parameters["use_deepspeed_lib"]
-        
+                    
         # Hub Path for Trained Model
         self.model_hub_path = parameters["model_hub_path"]
            
