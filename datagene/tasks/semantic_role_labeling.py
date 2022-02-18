@@ -135,9 +135,13 @@ class SRL(TaskBase):
             for jdx in range(len(label)):
                 if label[jdx] == self.l2i[self.special_label_tokens["pad"]]:
                     break
-
+                
                 true.append(self.i2l[label[jdx].item()])
-                pred.append(self.i2l[pred_tags[idx][jdx].item()])
+                
+                if pred_tags[idx][jdx] == self.l2i[self.special_label_tokens["pad"]]:
+                    pred.append("O")
+                else:
+                    pred.append(self.i2l[pred_tags[idx][jdx].item()])
 
             true_y.append(true)
             pred_y.append(pred)
