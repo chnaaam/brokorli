@@ -1,7 +1,8 @@
 from abc import *
 
-import os
 import torch
+
+from accelerate import Accelerator
 
 from datagene.models import ModelBuilder
 
@@ -44,7 +45,12 @@ class TaskBase(metaclass=ABCMeta):
                     
         # Hub Path for Trained Model
         self.model_hub_path = parameters["model_hub_path"]
-           
+        
+        # Huggingface Accelerator
+        self.accelerator = Accelerator(
+            fp16=self.cfg.fp16, 
+            cpu=False if self.use_cuda else True
+        )
             
     def build(self, layer_parameters):
         """
@@ -86,10 +92,22 @@ class TaskBase(metaclass=ABCMeta):
             lr_lambda = lambda epoch: 0.95 ** self.cfg.epochs
         )
         
+        
+        
         # If "use_cuda" parameter of configuration file is True, model is trained using gpu
-        if self.use_cuda:
-            self.model = self.model.cuda()
-    
+        # if self.use_cuda:
+        #     self.model = self.model.cuda()
+        
+        self.device = self.accelerator.device
+        
+        self.model.to(self.device)
+        
+        self.model, self.optimizer, self.train_data_loader = self.accelerator.prepare(
+            self.model,
+            self.optimizer,
+            self.train_data_loader
+        )
+
     def save_model(self, path):
         torch.save(self.model.state_dict(), path)
     
