@@ -63,13 +63,12 @@ class SRL(TaskBase):
                 loss = outputs[0]
                 
                 self.accelerator.backward(loss)
-                self.optimizer.step()            
+                self.optimizer.step()
+                self.scheduler.step()  
                 
                 train_losses.append(loss.item())
                 
                 avg_train_loss = sum(train_losses) / len(train_losses)
-            
-            self.scheduler.step()
             
             avg_valid_loss, avg_valid_f1_score = self.valid()
             
@@ -134,20 +133,8 @@ class SRL(TaskBase):
             pred = []
 
             for jdx in range(len(label)):
-
-                if label[jdx] == self.l2i[self.special_label_tokens["begin"]]:
-                    continue
-
-                if label[jdx] == self.l2i[self.special_label_tokens["end"]]:
+                if label[jdx] == self.l2i[self.special_label_tokens["pad"]]:
                     break
-
-                if pred_tags[idx][jdx] in [
-                    self.l2i[self.special_label_tokens["begin"]], 
-                    self.l2i[self.special_label_tokens["pad"]], 
-                    self.l2i[self.special_label_tokens["end"]]
-                    ]:
-                    
-                    pred_tags[idx][jdx] = self.l2i["O"]
 
                 true.append(self.i2l[label[jdx].item()])
                 pred.append(self.i2l[pred_tags[idx][jdx].item()])
