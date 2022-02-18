@@ -13,26 +13,17 @@ class SrlDataset(Dataset):
     def __init__(self, tokenizer, data_list, cache_dir, vocab_dir, dataset_type="train", max_seq_len=256):
         super().__init__()
         
-        # Definition of special tokens
-        self.LABEL_BEGIN_TOKEN = "<BEGIN>"
-        self.LABEL_END_TOKEN = "<END>"   
+        # Definition of special tokens   
         self.LABEL_PAD_TOKEN = "<PAD>"
         self.START_OF_PREDICATE_SPECIAL_TOKEN = "<PREDICATE>"
         self.END_OF_PREDICATE_SPECIAL_TOKEN = "</PREDICATE>"
         
         self.SPECIAL_LABEL_TOKENS = {
-            "begin": self.LABEL_BEGIN_TOKEN, 
-            "end": self.LABEL_END_TOKEN, 
             "pad": self.LABEL_PAD_TOKEN
         }
     
         # add predicate tokens into tokenizer
-        self.tokenizer = tokenizer
-        self.tokenizer.add_special_tokens({"additional_special_tokens":[
-            self.START_OF_PREDICATE_SPECIAL_TOKEN,
-            self.END_OF_PREDICATE_SPECIAL_TOKEN
-        ]})
-        
+        self.tokenizer = tokenizer        
         self.max_seq_len = max_seq_len
         self.tokens = []
         self.labels = []
@@ -122,7 +113,7 @@ class SrlDataset(Dataset):
                 vocab += labels
                 
             self.vocab = list(set(vocab))
-            self.vocab = self.SPECIAL_LABEL_TOKENS.values() + self.vocab
+            self.vocab = list(self.SPECIAL_LABEL_TOKENS.values()) + self.vocab
             
             self.l2i = {l: i for i, l in enumerate(self.vocab)}
             self.i2l = {i: l for l, i in self.l2i.items()}
@@ -141,7 +132,8 @@ class SrlDataset(Dataset):
             self.vocab = list(set(self.l2i.keys()))
             self.i2l = {i: l for l, i in self.l2i.items()}
             
-    def convert_word_pos_to_char_pos(self, sentence, arguments):        
+    def convert_word_pos_to_char_pos(self, sentence, arguments):
+        # +2 - Predicate Tokens 
         char_label_list = ["O" for _ in range(len(sentence) + 2)]
 
         for argument in arguments:
@@ -214,8 +206,8 @@ class SrlDataset(Dataset):
         return len(self.tokens)
     
     def __getitem__(self, idx):
-        token_list = [self.tokenizer.cls_token] + self.tokens[idx] + [self.tokenizer.sep_token]
-        label_list = [self.LABEL_BEGIN_TOKEN] + self.labels[idx] + [self.LABEL_END_TOKEN]
+        token_list = [self.tokenizer.cls_token] + self.tokens[idx]
+        label_list = ["O"] + self.labels[idx]
         
         if len(token_list) <= self.max_seq_len:
             token_list += [self.tokenizer.pad_token] * (self.max_seq_len - len(token_list))
