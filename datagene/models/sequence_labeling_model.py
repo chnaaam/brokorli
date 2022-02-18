@@ -6,6 +6,8 @@ class SequenceLabelingModel(nn.Module):
     def __init__(self, model_name, parameters):
         super().__init__()
         
+        self.model_name = model_name
+        
         config = AutoConfig.from_pretrained(model_name)
         config.num_labels = parameters["label_size"]
         
@@ -17,11 +19,19 @@ class SequenceLabelingModel(nn.Module):
         attention_mask = parameters["attention_mask"]
         labels = parameters["labels"]
         
-        outputs = self.model(
-            X,
-            token_type_ids=token_type_ids,
-            attention_mask=attention_mask,
-            labels=labels,
-        )
-
+        # TODO: Roberta does not need token_type_ids
+        if "roberta" not in self.model_name:
+            outputs = self.model(
+                X,
+                token_type_ids=token_type_ids,
+                attention_mask=attention_mask,
+                labels=labels,
+            )
+        else:
+            outputs = self.model(
+                X,
+                attention_mask=attention_mask,
+                labels=labels,
+            )
+            
         return outputs

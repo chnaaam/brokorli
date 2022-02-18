@@ -59,16 +59,16 @@ class TaskBase(metaclass=ABCMeta):
         
         self.tokenizer = parameters["tokenizer"]
         
-        # param_optimizer = list(self.model.layers["kobert"].named_parameters())
-        # no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
-        # optimizer_grouped_parameters = [
-        #     {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': self.cfg.weight_decay},
-        #     {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
-        # ]
+        param_optimizer = list(self.model.named_parameters())
+        no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
+        optimizer_grouped_parameters = [
+            {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': self.cfg.weight_decay},
+            {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
+        ]
         
         self.optimizer = parameters["optimizer"](
-            self.model.parameters(), 
-            # optimizer_grouped_parameters,
+            # self.model.parameters(), 
+            optimizer_grouped_parameters,
             lr=float(self.cfg.learning_rate)
         )
         
