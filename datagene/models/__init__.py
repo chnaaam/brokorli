@@ -1,13 +1,5 @@
-from datagene.models.ko_electra import KoElectraLayer
-from .ko_bert import KoBERTLayer
-from .ko_electra import KoElectraLayer
-from .klue_roberta import KlueRobertaLayer
-from .crf import CRFLayer
-from .model_builder import ModelBuilder
+from .sequence_labeling_model import SequenceLabelingModel
 
-LAYER_LIST = {
-    "kobert": KoBERTLayer,
-    "koelectra": KoElectraLayer,
-    "klueroberta": KlueRobertaLayer,
-    "crf": CRFLayer
+MODEL_LIST = {
+    "sequence-labeling": SequenceLabelingModel
 }

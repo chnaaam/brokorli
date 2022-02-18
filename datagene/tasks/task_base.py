@@ -4,7 +4,10 @@ import torch
 
 from accelerate import Accelerator
 
-from datagene.models import ModelBuilder
+from datagene.models import (
+    MODEL_LIST, 
+    SequenceLabelingModel
+)
 
 
 class TaskBase(metaclass=ABCMeta):
@@ -12,17 +15,13 @@ class TaskBase(metaclass=ABCMeta):
     Task에 대한 추상 클래스 입니다. 
     만약, 새로운 Task를 정의하는 경우, 해당 클래스를 상속 받아 사용하면 됩니다.
     """
-    def __init__(self, **parameters):
+    def __init__(self, model_parameters, **parameters):
         """
         기본 Task 설정에 필요한 코드이며, 아래 변수들은 고정으로 사용됩니다.
         """
         
         # Model parameter
         self.cfg = parameters["parameter_cfg"]
-        
-        # Layer list for building model
-        self.layer_list = parameters["layer_list"]
-        self.tokenizer = parameters["tokenizer"]
         
         # Data loader
         self.train_data_loader = parameters["data_loader"]["train"]
@@ -51,28 +50,15 @@ class TaskBase(metaclass=ABCMeta):
             fp16=self.cfg.fp16, 
             cpu=False if self.use_cuda else True
         )
-            
-    def build(self, layer_parameters):
-        """
-        모델 및 Optimizer를 설정하는 함수로, Configuration 파일 내 모델 이름에 따라 layer_paremeter의 값을 설정해주면 됩니다.
         
-        layer_parameters argument example when model name is "kobert-crf"
+        # LM Model
+        self.model = MODEL_LIST[parameters["model_type"]](
+            model_name=self.cfg.model_name, 
+            parameters=model_parameters
+        )
         
-        layer_parameters = {
-            "kobert": {
-                "vocab_size": parameters["vocab_size"]
-            },
-            "crf": {
-                "in_features": self.cfg.crf_in_features,
-                "label_size": parameters["label_size"]
-            }
-        }
+        self.tokenizer = parameters["tokenizer"]
         
-        super().build(layer_parameters=layer_parameters)
-        """
-        self.model = ModelBuilder(layer_list=self.layer_list, layer_parameters=layer_parameters)
-        
-        # TODO : Please edit the "kobert" code. I wrote lambda scheduler hard code for the current version
         # param_optimizer = list(self.model.layers["kobert"].named_parameters())
         # no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
         # optimizer_grouped_parameters = [
@@ -80,23 +66,17 @@ class TaskBase(metaclass=ABCMeta):
         #     {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
         # ]
         
-        self.optimizer = self.optimizer_func(
+        self.optimizer = parameters["optimizer"](
             self.model.parameters(), 
             # optimizer_grouped_parameters,
             lr=float(self.cfg.learning_rate)
         )
         
         # TODO : Please edit the parameter. I wrote lambda scheduler hard code for the current version            
-        self.scheduler = self.scheduler_func(
+        self.scheduler = parameters["scheduler"](
             optimizer=self.optimizer,
             lr_lambda = lambda epoch: 0.95 ** self.cfg.epochs
         )
-        
-        
-        
-        # If "use_cuda" parameter of configuration file is True, model is trained using gpu
-        # if self.use_cuda:
-        #     self.model = self.model.cuda()
         
         self.device = self.accelerator.device
         
@@ -107,7 +87,7 @@ class TaskBase(metaclass=ABCMeta):
             self.optimizer,
             self.train_data_loader
         )
-
+            
     def save_model(self, path):
         torch.save(self.model.state_dict(), path)
     

@@ -1,13 +1,11 @@
 import os
 import torch.utils.data as data
-import torch.optim as optim
-import torch.nn as nn
 
 from .config import get_data_gene_config
 from .utils import *
 from .data_loaders import DATA_LIST
 from .tasks import TASK_LIST
-from .models import LAYER_LIST
+from .models import MODEL_LIST
 from .tokenizers import TOKENIZER_LIST
 from .functions import CRITERION_LIST, OPTIMIZER_LIST, SCHEDULER_LIST
 
@@ -15,9 +13,8 @@ from .functions import CRITERION_LIST, OPTIMIZER_LIST, SCHEDULER_LIST
 class DataGene:
     
     def __init__(self, cfg_path, cfg_fn):
-        cfg_full_path = os.path.join(cfg_path, cfg_fn)
         
-        if not is_existed_file(cfg_full_path):
+        if not is_existed_file(os.path.join(cfg_path, cfg_fn)):
             raise OSError("Configuration directory or file is not existed")
         
         self.cfg = get_data_gene_config(cfg_path=cfg_path, cfg_fn=cfg_fn)
@@ -31,20 +28,16 @@ class DataGene:
             task_cfg = self.cfg.tasks.srl
         else:
             raise NotImplementedError()
-    
-        # Build model
-        layer_list = {layer_name: LAYER_LIST[layer_name] for layer_name in task_cfg.model.split("-")}
-        
+            
         # Load Tokenizer
         tokenizer = TOKENIZER_LIST[task_cfg.tokenizer]
         
-        # Load cache dataset or build dataset for training
-        cache_dir = self.cfg.path.cache
-        train_cache_path = os.path.join(cache_dir, f"{task_name}-train-data.cache")
-        valid_cache_path = os.path.join(cache_dir, f"{task_name}-valid-data.cache")
-        test_cache_path = os.path.join(cache_dir, f"{task_name}-test-data.cache")
+        # Check that cache file is existed
+        train_cache_path = os.path.join(self.cfg.path.cache, f"{task_name}-train-data.cache")
+        valid_cache_path = os.path.join(self.cfg.path.cache, f"{task_name}-valid-data.cache")
+        test_cache_path = os.path.join(self.cfg.path.cache, f"{task_name}-test-data.cache")
         
-        # Build dataset
+        # If cache file is not existed, data is loaded
         train_data_list, valid_data_list, test_data_list = None, None, None
         
         if not os.path.exists(train_cache_path) or not os.path.exists(valid_cache_path) or not os.path.exists(test_cache_path):
@@ -78,37 +71,62 @@ class DataGene:
             max_seq_len=self.cfg.parameters.max_seq_len)
         
         # Make environment for selected task
-        
         task = TASK_LIST[task_name](
+            
+            # Configuration for training
             parameter_cfg=self.cfg.parameters,
-            layer_list=layer_list,
+            
+            # Selected LM Model
+            # - model name = {}
+            model_name=task_cfg.model_name,
+            model_type=task_cfg.model_type,
+            
+            # Tokenizer
             tokenizer=tokenizer,
+            
+            # Train, valid, test data Loader
             data_loader={
                 "train": data.DataLoader(train_dataset, batch_size=self.cfg.parameters.batch_size, shuffle=True, pin_memory=True, num_workers=self.cfg.parameters.num_workers),
                 "valid": data.DataLoader(valid_dataset, batch_size=self.cfg.parameters.batch_size, shuffle=True, pin_memory=True, num_workers=self.cfg.parameters.num_workers),
                 "test": data.DataLoader(test_dataset, batch_size=self.cfg.parameters.batch_size, shuffle=True, pin_memory=True, num_workers=self.cfg.parameters.num_workers),
             },
+            
+            # Optimizer, loss function, scheduler
             optimizer=OPTIMIZER_LIST[self.cfg.parameters.optimizer],
             criterion=CRITERION_LIST[self.cfg.parameters.criterion],
             scheduler=SCHEDULER_LIST[self.cfg.parameters.scheduler],
+            
+            # Use GPU or not
             use_cuda=self.cfg.use_cuda,
+            
+            # The model hub is a directory where models are stored when model training is over.
             model_hub_path=os.path.join(self.cfg.path.root, self.cfg.path.model),
             
             # Optional Parameters
+            # If a special token is added, the input size of the model is adjusted.
             vocab_size=len(train_dataset.tokenizer),
+            
+            # Label Size
             label_size=len(train_dataset.l2i) if "l2i" in vars(train_dataset).keys() else None,
+            
+            # Token index in tokenizer and label-index pair
             token_pad_id=tokenizer.pad_token_id,
             l2i=train_dataset.l2i if "l2i" in vars(train_dataset).keys() else None,
             i2l=train_dataset.i2l if "i2l" in vars(train_dataset).keys() else None,
+            
+            # Special token list for decoding sequence labeling outputs
             special_label_tokens=train_dataset.SPECIAL_LABEL_TOKENS if "SPECIAL_LABEL_TOKENS" in vars(train_dataset).keys() else None
         )
         
+        # Train
         task.train()
     
     def load_dataset(self, task_name, task_cfg):
-        
-        # Build dataset
+        # Load data when data parameter in configuration file is existed.
+        # If data parameter is not existed, load train, valid, test dataset using configuration file.
+        # Therefore, parameters must be added between dataset file names or specific dataset(train, valid, test) file names.
         if "data" in task_cfg.dataset.__dict__:
+            # Load dataset
             data = DATA_LIST[task_name]["data"](dataset_dir=task_cfg.dataset.path, dataset_fn=task_cfg.dataset.data).data
             
             import random

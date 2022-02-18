@@ -13,6 +13,7 @@ Example
         }
     }
 """
+
 DATA_LIST = {
     "srl": {
         "data": SrlData,

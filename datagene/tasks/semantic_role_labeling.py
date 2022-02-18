@@ -9,34 +9,22 @@ from datagene.metrics.f1_score import calculate_f1_score
 class SRL(TaskBase):
 
     def __init__(self, **parameters):
-        
-        # Set common parameters for TaskBase
-        super().__init__(**parameters)
-        
         self.vocab_size = parameters["vocab_size"]
+        self.label_size = parameters["label_size"]
+        
         self.token_pad_id = parameters["token_pad_id"]
         self.l2i = parameters["l2i"]
         self.i2l = parameters["i2l"]
         self.special_label_tokens = parameters["special_label_tokens"]
         
         # Set optional parameter for SRL Task
-        LAYER_INIT_PARAMETERS = {
-            "kobert": {
-                "vocab_size": parameters["vocab_size"]    
-            },
-            "koelectra": {
-                "vocab_size": parameters["vocab_size"]
-            },
-            "klueroberta": {
-                "vocab_size": parameters["vocab_size"]
-            },
-            "crf": {
-                "in_features": self.cfg.crf_in_features,
-                "label_size": parameters["label_size"]
-            }
+        MODEL_INIT_PARAMETERS = {
+            "vocab_size": self.vocab_size,
+            "label_size": self.label_size
         }
         
-        self.build(layer_parameters=LAYER_INIT_PARAMETERS)
+        # Set common parameters for TaskBase and build model
+        super().__init__(model_parameters=MODEL_INIT_PARAMETERS, **parameters)
         
     def train(self):
         
@@ -64,7 +52,7 @@ class SRL(TaskBase):
                 
                 self.optimizer.zero_grad()
                 
-                loss, _ = self.model(
+                outputs = self.model(
                     token_tensor, 
                     token_type_ids=token_type_ids_tensor,
                     attention_mask=(token_tensor != self.token_pad_id).float(),
@@ -72,7 +60,8 @@ class SRL(TaskBase):
                     crf_masks=(token_tensor != self.token_pad_id)
                 )
                 
-                # loss.backward()
+                loss = outputs[0]
+                
                 self.accelerator.backward(loss)
                 self.optimizer.step()            
                 
@@ -105,13 +94,18 @@ class SRL(TaskBase):
                 if self.use_cuda:
                     token_tensor, token_type_ids_tensor, label_tensor = token_tensor.cuda(), token_type_ids_tensor.cuda(), label_tensor.cuda()
                 
-                loss, pred_tags = self.model(
+                outputs = self.model(
                     token_tensor, 
                     token_type_ids=token_type_ids_tensor,
                     attention_mask=(token_tensor != self.token_pad_id).float(),
                     labels=label_tensor,
                     crf_masks=(token_tensor != self.token_pad_id)
                 )
+                
+                loss = outputs[0]
+                logits = outputs[1]
+                
+                pred_tags = torch.argmax(logits, dim=2)
                 
                 valid_losses.append(loss.item())
                 true_y, pred_y = self.decode(label_tensor, pred_tags)
@@ -156,7 +150,7 @@ class SRL(TaskBase):
                     pred_tags[idx][jdx] = self.l2i["O"]
 
                 true.append(self.i2l[label[jdx].item()])
-                pred.append(self.i2l[pred_tags[idx][jdx]])
+                pred.append(self.i2l[pred_tags[idx][jdx].item()])
 
             true_y.append(true)
             pred_y.append(pred)

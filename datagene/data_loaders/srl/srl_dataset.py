@@ -225,7 +225,7 @@ class SrlDataset(Dataset):
             label_list = label_list[:self.max_seq_len]
             
         token_ids = self.tokenizer.convert_tokens_to_ids(token_list)
-        token_type_ids = [0] * len(token_list)
+        token_type_ids = [1] * len(token_list)
         label_ids = [self.l2i[label] for label in label_list]
         
         
