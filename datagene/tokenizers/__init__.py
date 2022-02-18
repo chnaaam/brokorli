@@ -1,7 +1,8 @@
 from .tokenization_kobert import KoBertTokenizer
-from transformers import ElectraTokenizer
+from transformers import AutoTokenizer
 
 TOKENIZER_LIST = {
     "bert": KoBertTokenizer.from_pretrained("monologg/kobert"),
-    "electra": ElectraTokenizer.from_pretrained("monologg/koelectra-base-v3-discriminator")
+    "electra": AutoTokenizer.from_pretrained("monologg/koelectra-base-v3-discriminator"),
+    "roberta": AutoTokenizer.from_pretrained("klue/roberta-base")
 }
