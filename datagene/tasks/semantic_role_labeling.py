@@ -24,6 +24,9 @@ class SRL(TaskBase):
             "kobert": {
                 "vocab_size": parameters["vocab_size"]    
             },
+            "koelectra": {
+                "vocab_size": parameters["vocab_size"]
+            },
             "crf": {
                 "in_features": self.cfg.crf_in_features,
                 "label_size": parameters["label_size"]
