@@ -10,7 +10,7 @@ from .srl_data import SrlData
 
 class SrlDataset(Dataset):
     
-    def __init__(self, tokenizer, data_list, cache_dir, vocab_dir, dataset_type="train", max_seq_len=256):
+    def __init__(self, tokenizer, model_name, data_list, cache_dir, vocab_dir, dataset_type="train", max_seq_len=256):
         super().__init__()
         
         # Definition of special tokens   
@@ -23,18 +23,19 @@ class SrlDataset(Dataset):
         }
     
         # add predicate tokens into tokenizer
-        self.tokenizer = tokenizer        
+        self.tokenizer = tokenizer
+        self.model_name = model_name
         self.max_seq_len = max_seq_len
         self.tokens = []
         self.labels = []
         
-        cache_path = os.path.join(cache_dir, f"srl-{dataset_type}-data.cache")
+        cache_path = os.path.join(cache_dir, f"srl-{dataset_type}-{model_name}-data.cache")
         
         # we use cache file for improving data loading speed when cache file is existed in cache directory.
         # But file is not existed, then build dataset and save into cache file
         if not os.path.isfile(cache_path):
             
-            for data in tqdm(data_list, desc=f"Load {dataset_type} data"):
+            for data in tqdm(data_list, desc=f"Tokenize {dataset_type} data"):
                 sentence = data["sentence"]
                 predicate = data["predicate"]
                 arguments = data["arguments"]

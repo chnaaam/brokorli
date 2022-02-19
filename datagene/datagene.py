@@ -31,24 +31,15 @@ class DataGene:
             raise NotImplementedError()
             
         # Load Tokenizer
-        tokenizer = TOKENIZER_LIST[task_cfg.model_name]
+        tokenizer = TOKENIZER_LIST[task_cfg.model_name].from_pretrained(MODEL_NAME_LIST[task_cfg.model_name])
         
-        # Check that cache file is existed
-        train_cache_path = os.path.join(self.cfg.path.cache, f"{task_name}-train-data.cache")
-        valid_cache_path = os.path.join(self.cfg.path.cache, f"{task_name}-valid-data.cache")
-        test_cache_path = os.path.join(self.cfg.path.cache, f"{task_name}-test-data.cache")
+        # Load data
+        train_data_list, valid_data_list, test_data_list = self.load_dataset(task_name=task_name, task_cfg=task_cfg)
         
-        # If cache file is not existed, data is loaded
-        train_data_list, valid_data_list, test_data_list = None, None, None
-        
-        if not os.path.exists(train_cache_path) or not os.path.exists(valid_cache_path) or not os.path.exists(test_cache_path):
-            train_data_list, valid_data_list, test_data_list = self.load_dataset(task_name=task_name, task_cfg=task_cfg)
-        
-            if not train_data_list and not valid_data_list and not test_data_list:
-                raise ValueError("Dataset is empty")
-        
+        # Load dataset
         train_dataset = DATA_LIST[task_name]["dataset"](
             tokenizer=tokenizer,
+            model_name=task_cfg.model_name,
             data_list=train_data_list, 
             cache_dir=os.path.join(self.cfg.path.root, self.cfg.path.cache),
             vocab_dir=os.path.join(self.cfg.path.root, self.cfg.path.vocab),
@@ -57,6 +48,7 @@ class DataGene:
         
         valid_dataset = DATA_LIST[task_name]["dataset"](
             tokenizer=tokenizer,
+            model_name=task_cfg.model_name,
             data_list=valid_data_list, 
             cache_dir=os.path.join(self.cfg.path.root, self.cfg.path.cache),
             vocab_dir=os.path.join(self.cfg.path.root, self.cfg.path.vocab),
@@ -65,6 +57,7 @@ class DataGene:
         
         test_dataset = DATA_LIST[task_name]["dataset"](
             tokenizer=tokenizer,
+            model_name=task_cfg.model_name,
             data_list=test_data_list, 
             cache_dir=os.path.join(self.cfg.path.root, self.cfg.path.cache),
             vocab_dir=os.path.join(self.cfg.path.root, self.cfg.path.vocab),
@@ -126,25 +119,50 @@ class DataGene:
         # Load data when data parameter in configuration file is existed.
         # If data parameter is not existed, load train, valid, test dataset using configuration file.
         # Therefore, parameters must be added between dataset file names or specific dataset(train, valid, test) file names.
-        if "data" in task_cfg.dataset.__dict__:
-            # Load dataset
-            data = DATA_LIST[task_name]["data"](dataset_dir=task_cfg.dataset.path, dataset_fn=task_cfg.dataset.data).data
-            
-            import random
-            random.shuffle(data)
-            
-            # Split data (Ratio - Train : Valid : Test = 8 : 1 : 1)
-            len_data = len(data)
-            len_train_data = int(len_data * 0.8)
-            len_valid_data = int(len_data * 0.1)
-            
-            train_data_list = data[: len_train_data]
-            valid_data_list = data[len_train_data: len_train_data + len_valid_data]
-            test_data_list = data[len_train_data + len_valid_data : ]
+        
+        
+        # Check that train, valid, test file is existed
+        train_data_path = os.path.join(task_cfg.dataset.path, f"{task_name}.train")
+        valid_data_path = os.path.join(task_cfg.dataset.path, f"{task_name}.valid")
+        test_data_path = os.path.join(task_cfg.dataset.path, f"{task_name}.test")
+        
+        # If three file is not existed, data is loaded
+        train_data_list, valid_data_list, test_data_list = None, None, None
+        
+        if not os.path.exists(train_data_path) or not os.path.exists(valid_data_path) or not os.path.exists(test_data_path):        
+            if "data" in task_cfg.dataset.__dict__:
+                # Load dataset
+                data = DATA_LIST[task_name]["data"](dataset_dir=task_cfg.dataset.path, dataset_fn=task_cfg.dataset.data).data
+                
+                import random
+                import json
+                
+                random.shuffle(data)
+                
+                # Split data (Ratio - Train : Valid : Test = 8 : 1 : 1)
+                len_data = len(data)
+                len_train_data = int(len_data * 0.8)
+                len_valid_data = int(len_data * 0.1)
+                
+                train_data_list = data[: len_train_data]
+                valid_data_list = data[len_train_data: len_train_data + len_valid_data]
+                test_data_list = data[len_train_data + len_valid_data : ]
+                
+                for path, data in [(train_data_path, train_data_list), (valid_data_path, valid_data_list), (test_data_path, test_data_list)]:
+                    with open(path, "w", encoding="utf-8") as fp:
+                        json.dump(data, fp, ensure_ascii=False, indent=4)
+                
+                if not train_data_list and not valid_data_list and not test_data_list:
+                    raise ValueError("Dataset is empty")
+                
+            else:
+                train_data_list = DATA_LIST[task_name]["data"](dataset_dir=task_cfg.dataset.path, dataset_fn=task_cfg.dataset.train).data
+                valid_data_list = DATA_LIST[task_name]["data"](dataset_dir=task_cfg.dataset.path, dataset_fn=task_cfg.dataset.valid).data
+                test_data_list = DATA_LIST[task_name]["data"](dataset_dir=task_cfg.dataset.path, dataset_fn=task_cfg.dataset.test).data
         else:
-            train_data_list = DATA_LIST[task_name]["data"](dataset_dir=task_cfg.dataset.path, dataset_fn=task_cfg.dataset.train).data
-            valid_data_list = DATA_LIST[task_name]["data"](dataset_dir=task_cfg.dataset.path, dataset_fn=task_cfg.dataset.valid).data
-            test_data_list = DATA_LIST[task_name]["data"](dataset_dir=task_cfg.dataset.path, dataset_fn=task_cfg.dataset.test).data
+            train_data_list = DATA_LIST[task_name]["data"](dataset_dir=task_cfg.dataset.path, dataset_fn=f"{task_name}-{task_cfg.model_name}.train").data
+            valid_data_list = DATA_LIST[task_name]["data"](dataset_dir=task_cfg.dataset.path, dataset_fn=f"{task_name}-{task_cfg.model_name}.valid").data
+            test_data_list = DATA_LIST[task_name]["data"](dataset_dir=task_cfg.dataset.path, dataset_fn=f"{task_name}-{task_cfg.model_name}.test").data
         
         return train_data_list, valid_data_list, test_data_list
     
