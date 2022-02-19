@@ -6,17 +6,15 @@ from collections import deque
 from tqdm import tqdm
 from torch.utils.data import Dataset
 
-from .srl_data import SrlData
-
 class SrlDataset(Dataset):
     
-    def __init__(self, tokenizer, model_name, data_list, cache_dir, vocab_dir, dataset_type="train", max_seq_len=256):
+    def __init__(self, tokenizer, special_tokens, model_name, data_list, cache_dir, vocab_dir, dataset_type="train", max_seq_len=256):
         super().__init__()
         
         # Definition of special tokens   
         self.LABEL_PAD_TOKEN = "<PAD>"
-        self.START_OF_PREDICATE_SPECIAL_TOKEN = "<PREDICATE>"
-        self.END_OF_PREDICATE_SPECIAL_TOKEN = "</PREDICATE>"
+        self.START_OF_PREDICATE_SPECIAL_TOKEN = special_tokens["predicate_begin"]
+        self.END_OF_PREDICATE_SPECIAL_TOKEN = special_tokens["predicate_end"]
         
         self.SPECIAL_LABEL_TOKENS = {
             "pad": self.LABEL_PAD_TOKEN
@@ -33,6 +31,7 @@ class SrlDataset(Dataset):
         
         # we use cache file for improving data loading speed when cache file is existed in cache directory.
         # But file is not existed, then build dataset and save into cache file
+        count = 0
         if not os.path.isfile(cache_path):
             
             for data in tqdm(data_list, desc=f"Tokenize {dataset_type} data"):
@@ -81,14 +80,14 @@ class SrlDataset(Dataset):
                             arguments[idx]["end"] += 2
                     
                     char_label_list =  self.convert_word_pos_to_char_pos(sentence=original_sentence, arguments=arguments)
-                    label_list = self.convert_char_pos_to_token_pos(token_list=token_list, char_label_list=char_label_list)
+                    label_list = self.convert_char_pos_to_token_pos(token_list=token_list, char_label_list=char_label_list)                    
                     label_list = self.convert_plain_label_to_bioes_tag(label_list=label_list)
                     
                     self.tokens.append(token_list)
                     self.labels.append(label_list)
                         
                 except IndexError:
-                    pass
+                    count += 1
             
             # Save cache file
             with open(cache_path, "wb") as fp:
@@ -113,7 +112,7 @@ class SrlDataset(Dataset):
             for labels in self.labels:
                 vocab += labels
                 
-            self.vocab = list(set(vocab))
+            self.vocab = list(set(vocab))   
             self.vocab = list(self.SPECIAL_LABEL_TOKENS.values()) + self.vocab
             
             self.l2i = {l: i for i, l in enumerate(self.vocab)}
@@ -152,8 +151,14 @@ class SrlDataset(Dataset):
         for token_idx, token in enumerate(token_list):
             label = "O"
             
-            if token_idx == 0 and token.startswith("▁"):
+            if token_idx == 0:
                 token = token[1:]
+            else:
+                if token.startswith("▁"):
+                    token = token.replace("▁", " ")
+                
+            if not token:
+                token = " "
             
             if token == self.START_OF_PREDICATE_SPECIAL_TOKEN or token == self.END_OF_PREDICATE_SPECIAL_TOKEN:
                 char_label_list.popleft()
