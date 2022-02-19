@@ -1,13 +1,9 @@
 from abc import *
 
-import torch
-
 from accelerate import Accelerator
+from transformers import get_linear_schedule_with_warmup
 
-from datagene.models import (
-    MODEL_LIST, 
-    SequenceLabelingModel
-)
+from datagene.models import MODEL_LIST
 
 
 class TaskBase(metaclass=ABCMeta):
@@ -53,7 +49,7 @@ class TaskBase(metaclass=ABCMeta):
         
         # LM Model
         self.model = MODEL_LIST[parameters["model_type"]](
-            model_name=self.cfg.model_name, 
+            model_name=parameters["model_name"], 
             parameters=model_parameters
         )
         
@@ -67,16 +63,17 @@ class TaskBase(metaclass=ABCMeta):
         ]
         
         self.optimizer = parameters["optimizer"](
-            # self.model.parameters(), 
             optimizer_grouped_parameters,
             lr=float(self.cfg.learning_rate)
         )
         
-        # TODO : Please edit the parameter. I wrote lambda scheduler hard code for the current version            
-        self.scheduler = parameters["scheduler"](
-            optimizer=self.optimizer,
-            lr_lambda = lambda epoch: 0.95 ** self.cfg.epochs
-        )
+        total_steps = len(self.train_data_loader) * self.cfg.epochs
+
+        self.scheduler = get_linear_schedule_with_warmup(
+            self.optimizer, 
+            num_warmup_steps = 0,
+            num_training_steps = total_steps)
+        
         
         self.device = self.accelerator.device
         

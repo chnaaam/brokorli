@@ -1,6 +1,7 @@
 import os
 import torch.utils.data as data
 
+from . import MODEL_NAME_LIST
 from .config import get_data_gene_config
 from .utils import *
 from .data_loaders import DATA_LIST
@@ -30,7 +31,7 @@ class DataGene:
             raise NotImplementedError()
             
         # Load Tokenizer
-        tokenizer = TOKENIZER_LIST[task_cfg.tokenizer]
+        tokenizer = TOKENIZER_LIST[task_cfg.model_name]
         
         # Check that cache file is existed
         train_cache_path = os.path.join(self.cfg.path.cache, f"{task_name}-train-data.cache")
@@ -78,7 +79,7 @@ class DataGene:
             
             # Selected LM Model
             # - model name = {}
-            model_name=task_cfg.model_name,
+            model_name=MODEL_NAME_LIST[task_cfg.model_name],
             model_type=task_cfg.model_type,
             
             # Tokenizer
