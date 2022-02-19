@@ -23,6 +23,13 @@ class SrlDataset(Dataset):
         # add predicate tokens into tokenizer
         self.tokenizer = tokenizer
         self.model_name = model_name
+        if self.model_name == "bert":
+            self.special_tokenizer_sep_indicator = "▁"
+            self.special_tokenizer_replaced_sep_indicator = " "
+        else:
+            self.special_tokenizer_sep_indicator = "##"
+            self.special_tokenizer_replaced_sep_indicator = ""
+            
         self.max_seq_len = max_seq_len
         self.tokens = []
         self.labels = []
@@ -133,8 +140,9 @@ class SrlDataset(Dataset):
             self.i2l = {i: l for l, i in self.l2i.items()}
             
     def convert_word_pos_to_char_pos(self, sentence, arguments):
+        
         # +2 - Predicate Tokens 
-        char_label_list = ["O" for _ in range(len(sentence) + 2)]
+        char_label_list = ["O" for _ in range(len(sentence.replace(" ", "")) + 2)]
 
         for argument in arguments:
             begin_idx = int(argument["begin"])
@@ -152,10 +160,11 @@ class SrlDataset(Dataset):
             label = "O"
             
             if token_idx == 0:
-                token = token[1:]
+                if self.model_name == "bert":
+                    token = token[1:]
             else:
-                if token.startswith("▁"):
-                    token = token.replace("▁", " ")
+                if token.startswith(self.special_tokenizer_sep_indicator):
+                    token = token.replace(self.special_tokenizer_sep_indicator, self.special_tokenizer_replaced_sep_indicator)
                 
             if not token:
                 token = " "
