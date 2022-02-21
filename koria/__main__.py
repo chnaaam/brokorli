@@ -2,9 +2,19 @@ import torch
 import numpy as np
 import random
 import argparse
+import logging
+
+logger = logging.getLogger("koria")
 
 from koria import KoRIA
 
+def init_logger():
+    logging.basicConfig(
+        level=logging.INFO,
+        format='[%(asctime)s|%(levelname)s] > %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S',
+    )
+    
 def fix_torch_seed(random_seed=42):
     torch.manual_seed(random_seed)
 
@@ -27,16 +37,19 @@ if __name__ == "__main__":
     parser.add_argument("--type", choices=["train", "predict"])
     
     # Train specific task
-    parser.add_argument("--task_name", type=str, default="srl", choices=["srl", ])
+    parser.add_argument("--task_name", type=str, default="srl", choices=["srl", "ner"])
     
     args = parser.parse_args()
+    
+    init_logger()
+    fix_torch_seed()
+    
+    logger.info("KoRIA package")
     
     koria = KoRIA(
         cfg_path=args.cfg_path, 
         cfg_fn=args.cfg_fn
     )
-    
-    fix_torch_seed()
     
     if args.type == "train":
         koria.train(task_name=args.task_name)

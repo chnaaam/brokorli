@@ -6,6 +6,9 @@ SPECIAL_TOKEN_LIST = {
     "srl": {
         "predicate_begin": "<PREDICATE>",
         "predicate_end": "</PREDICATE>"
+    },
+    "ner": {
+        
     }
 }
 

@@ -6,7 +6,8 @@ from abc import *
 class DataBase(metaclass=ABCMeta):
     def __init__(self, dataset_path):
         self.dump = None
-        
+        self.data = []
+          
         if not os.path.isfile(dataset_path):
             raise FileNotFoundError(f"{dataset_path} dataset file could not be found")
         

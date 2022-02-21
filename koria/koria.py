@@ -1,6 +1,10 @@
 import os
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
+import logging
+
+logger = logging.getLogger("koria")
+
 import torch.utils.data as data
 
 from . import MODEL_NAME_LIST
@@ -19,25 +23,35 @@ class KoRIA:
         if not is_existed_file(os.path.join(cfg_path, cfg_fn)):
             raise OSError("Configuration directory or file is not existed")
         
+        logger.info("Load configuration file")
         self.cfg = get_data_gene_config(cfg_path=cfg_path, cfg_fn=cfg_fn)
         
         for path in vars(self.cfg.path).values():
             make_dir(os.path.join(self.cfg.path.root, path))
             
     def train(self, task_name):
+        logger.info(f"Task : {task_name}")
         
         if task_name == "srl":
             task_cfg = self.cfg.tasks.srl
+        if task_name == "ner":
+            task_cfg = self.cfg.tasks.ner
         else:
             raise NotImplementedError()
-            
+        
         # Load Tokenizer
+        logger.info(f"Model name : {task_cfg.model_name}")
+        logger.info(f"Model type : {task_cfg.model_type}")
+        logger.info(f"Tokenizer name : {task_cfg.model_name}")
+        
         tokenizer = TOKENIZER_LIST[task_cfg.model_name].from_pretrained(MODEL_NAME_LIST[task_cfg.model_name])
         
         # Add special tokens in tokenizer
         tokenizer.add_special_tokens({"additional_special_tokens": list(SPECIAL_TOKEN_LIST[task_name].values())})
         
         # Load data
+        logger.info(f"Load data")
+        
         train_data_list, valid_data_list, test_data_list = load_data(task_cfg=task_cfg, task_name=task_name)
         
         # Load dataset
@@ -56,6 +70,8 @@ class KoRIA:
         train_dataset, valid_dataset, test_dataset = dataset_list
         
         # Make environment for selected task
+        logger.info(f"Make environment for {task_name} task")
+        
         task = TASK_LIST[task_name](
             
             # Configuration for training

@@ -20,7 +20,8 @@ Example
 
 
 DATA_LIST = {
-    "srl": SrlData
+    "srl": SrlData,
+    "ner": NerData
 }
 
 def load_data(task_cfg, task_name):
@@ -39,7 +40,16 @@ def load_data(task_cfg, task_name):
     if not os.path.exists(train_data_path) or not os.path.exists(valid_data_path) or not os.path.exists(test_data_path):        
         if "data" in task_cfg.dataset.__dict__:
             # Load dataset
-            data = DATA_LIST[task_name](dataset_path=os.path.join(task_cfg.dataset.path, task_cfg.dataset.data)).data
+            data = []
+            
+            # Multi dataset files
+            if type(task_cfg.dataset.data) is list:
+                for data_fn in task_cfg.dataset.data:
+                    data += DATA_LIST[task_name](dataset_path=os.path.join(task_cfg.dataset.path, data_fn)).data
+                    
+            # Single dataset file
+            else:
+                data = DATA_LIST[task_name](dataset_path=os.path.join(task_cfg.dataset.path, task_cfg.dataset.data)).data
             
             import random
             import json

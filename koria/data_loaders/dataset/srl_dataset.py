@@ -8,7 +8,7 @@ from torch.utils.data import Dataset
 
 class SrlDataset(Dataset):
     
-    def __init__(self, tokenizer, special_tokens, model_name, data_list, cache_dir, vocab_dir, dataset_type="train", max_seq_len=256):
+    def __init__(self, tokenizer, model_name, data_list, cache_dir, vocab_dir, dataset_type="train", max_seq_len=256, special_tokens=None):
         super().__init__()
         
         # Definition of special tokens   
