@@ -173,7 +173,7 @@ class NerDataset(Dataset):
     
     def __getitem__(self, idx):
         token_list = [self.tokenizer.cls_token] + self.tokens[idx]
-        label_list = ["O"] + self.labels[idx] + [self.LABEL_END_TOKEN]
+        label_list = ["O"] + self.labels[idx]
         
         if len(token_list) <= self.max_seq_len:
             token_list += [self.tokenizer.pad_token] * (self.max_seq_len - len(token_list))
