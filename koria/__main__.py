@@ -3,7 +3,7 @@ import numpy as np
 import random
 import argparse
 
-from datagene import DataGene
+from koria import DataGene
 
 def fix_torch_seed(random_seed=42):
     torch.manual_seed(random_seed)
@@ -22,7 +22,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     
     parser.add_argument("--cfg_path", type=str, default="./")
-    parser.add_argument("--cfg_fn", type=str, default="datagene.cfg")
+    parser.add_argument("--cfg_fn", type=str, default="koria.cfg")
     
     parser.add_argument("--type", choices=["train", "predict"])
     

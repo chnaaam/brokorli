@@ -4,7 +4,7 @@ from tqdm import tqdm
 
 from .task_base import TaskBase
 
-from datagene.metrics.f1_score import calculate_f1_score
+from koria.metrics.f1_score import calculate_f1_score
 
 class SRL(TaskBase):
 

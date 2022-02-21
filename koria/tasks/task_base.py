@@ -4,7 +4,7 @@ import torch
 from accelerate import Accelerator
 from transformers import get_linear_schedule_with_warmup
 
-from datagene.models import MODEL_LIST
+from koria.models import MODEL_LIST
 
 
 class TaskBase(metaclass=ABCMeta):

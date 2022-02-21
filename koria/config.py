@@ -34,7 +34,7 @@ def get_data_gene_config(cfg_path, cfg_fn):
     """
     config_full_path = os.path.join(cfg_path, cfg_fn)
 
-    with open(config_full_path) as fp:
+    with open(config_full_path, "r", encoding="utf-8") as fp:
         data = yaml.load(fp, Loader=yaml.FullLoader)
 
     return ConfigBase(data=data)
