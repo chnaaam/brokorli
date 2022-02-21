@@ -38,7 +38,6 @@ class SrlDataset(Dataset):
         
         # we use cache file for improving data loading speed when cache file is existed in cache directory.
         # But file is not existed, then build dataset and save into cache file
-        count = 0
         if not os.path.isfile(cache_path):
             
             for data in tqdm(data_list, desc=f"Tokenize {dataset_type} data"):
@@ -94,7 +93,7 @@ class SrlDataset(Dataset):
                     self.labels.append(label_list)
                         
                 except IndexError:
-                    count += 1
+                    pass
             
             # Save cache file
             with open(cache_path, "wb") as fp:

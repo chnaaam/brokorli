@@ -1,4 +1,6 @@
 import os
+os.environ["TOKENIZERS_PARALLELISM"] = "true"
+
 import torch.utils.data as data
 
 from . import MODEL_NAME_LIST

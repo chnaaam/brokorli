@@ -43,9 +43,6 @@ class SRL(TaskBase):
                 
                 token_tensor, token_type_ids_tensor, label_tensor = data
                 
-                # if self.use_cuda:
-                #     token_tensor, token_type_ids_tensor, label_tensor = token_tensor.cuda(), token_type_ids_tensor.cuda(), label_tensor.cuda()
-                
                 token_tensor.to(self.device)
                 token_type_ids_tensor.to(self.device)
                 label_tensor.to(self.device)
