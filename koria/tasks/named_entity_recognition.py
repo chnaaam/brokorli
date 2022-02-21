@@ -60,7 +60,6 @@ class NER(TaskBase):
                 self.accelerator.backward(loss)
                 
                 self.optimizer.step()
-                self.scheduler.step()  
                 
                 train_losses.append(loss.item())
                 
