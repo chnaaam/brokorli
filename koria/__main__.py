@@ -3,7 +3,7 @@ import numpy as np
 import random
 import argparse
 
-from koria import DataGene
+from koria import KoRIA
 
 def fix_torch_seed(random_seed=42):
     torch.manual_seed(random_seed)
@@ -31,7 +31,7 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
     
-    datagene = DataGene(
+    koria = KoRIA(
         cfg_path=args.cfg_path, 
         cfg_fn=args.cfg_fn
     )
@@ -39,9 +39,9 @@ if __name__ == "__main__":
     fix_torch_seed()
     
     if args.type == "train":
-        datagene.train(task_name=args.task_name)
-    elif args.type == "predict":
-        datagene.predict()
+        koria.train(task_name=args.task_name)
+    # elif args.type == "predict":
+    #     koria.predict()
     else:
         raise NotImplementedError()
     

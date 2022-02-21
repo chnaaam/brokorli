@@ -12,7 +12,7 @@ from .tokenizers import TOKENIZER_LIST, SPECIAL_TOKEN_LIST
 from .functions import CRITERION_LIST, OPTIMIZER_LIST, SCHEDULER_LIST
 
 
-class DataGene:
+class KoRIA:
     
     def __init__(self, cfg_path, cfg_fn):
         

@@ -6,4 +6,4 @@ MODEL_NAME_LIST = {
 }
 
 
-from .datagene import DataGene
+from .koria import KoRIA
