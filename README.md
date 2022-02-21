@@ -1,2 +1,2 @@
-# KoIE-DataGene
-Data Generation Framework for Korean Information Extraction
+# KoRIA Framework
+## Korean Relational Information Acquisition Framework

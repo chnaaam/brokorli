@@ -30,12 +30,10 @@ class KoRIA:
     def train(self, task_name):
         logger.info(f"Task : {task_name}")
         
-        if task_name == "srl":
-            task_cfg = self.cfg.tasks.srl
-        if task_name == "ner":
-            task_cfg = self.cfg.tasks.ner
+        if task_name in vars(self.cfg.tasks).keys():
+            task_cfg = vars(self.cfg.tasks)[task_name]
         else:
-            raise NotImplementedError()
+            raise ValueError(f"The task is not defined. Define the {task_name} task.")
         
         # Load Tokenizer
         logger.info(f"Model name : {task_cfg.model_name}")
