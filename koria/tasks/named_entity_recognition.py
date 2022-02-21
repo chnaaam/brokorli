@@ -58,6 +58,9 @@ class NER(TaskBase):
                 loss = outputs[0]
                 
                 self.accelerator.backward(loss)
+                
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
+                
                 self.optimizer.step()
                 self.scheduler.step()  
                 
@@ -67,10 +70,10 @@ class NER(TaskBase):
             
             avg_valid_loss, avg_valid_f1_score = self.valid()
             
-            print(f"Epoch : {epoch}\tTrain Loss : {avg_train_loss:.4f}\tValid Loss : {avg_valid_loss:.4f}\tValid F1 Score : {avg_valid_f1_score * 100:.2f}")
+            print(f"Epoch : {epoch}\tTrain Loss : {avg_train_loss:.4f}\tValid Loss : {avg_valid_loss:.4f}\tValid F1 Score : {avg_valid_f1_score * 100:.4f}")
             
             if max_score < avg_valid_f1_score:
-                self.save_model(path=os.path.join(self.model_hub_path, f"srl-score-{avg_valid_f1_score * 100:.2f}-e{epoch}.mdl"))
+                self.save_model(path=os.path.join(self.model_hub_path, f"ner-e{epoch}-{avg_valid_f1_score * 100:.4f}-lr{self.cfg.learning_rate}-len{self.cfg.max_seq_len}.mdl"))
                 
     def valid(self):
         self.model.eval()
@@ -81,7 +84,7 @@ class NER(TaskBase):
             
             progress_bar = tqdm(self.valid_data_loader)
             for data in progress_bar:
-                progress_bar.set_description(f"[Validation] Avg Loss : {avg_valid_loss:.4f} Avg Score : {avg_valid_f1_score * 100:.2f}")
+                progress_bar.set_description(f"[Validation] Avg Loss : {avg_valid_loss:.4f} Avg Score : {avg_valid_f1_score * 100:.4f}")
                 
                 token_tensor, token_type_ids_tensor, label_tensor = data
                 
@@ -99,7 +102,7 @@ class NER(TaskBase):
                 loss = outputs[0]
                 logits = outputs[1]
                 
-                pred_tags = torch.argmax(logits, dim=2)
+                pred_tags = torch.argmax(logits, dim=-1)
                 
                 valid_losses.append(loss.item())
                 true_y, pred_y = self.decode(label_tensor, pred_tags)

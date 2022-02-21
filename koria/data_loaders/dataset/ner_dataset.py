@@ -71,7 +71,12 @@ class NerDataset(Dataset):
                     
                     self.tokens.append(token_list)
                     self.labels.append(label_list)
-                        
+                    
+                    # For debugging
+                    # print(entities)
+                    # for token, label in zip(token_list, label_list):
+                    #     print(token + "\t" + label)
+                    
                 except IndexError:
                     pass
             
@@ -118,7 +123,7 @@ class NerDataset(Dataset):
             self.vocab = list(set(self.l2i.keys()))
             self.i2l = {i: l for l, i in self.l2i.items()}
         
-        logger.info(f"Size of {dataset_type} dataset : ", len(self.tokens))
+        # logger.info(f"Size of {dataset_type} dataset : ", len(self.tokens))
         
     def convert_word_pos_to_char_pos(self, sentence, arguments):        
         char_label_list = ["O" for _ in range(len(sentence) + 2)]
