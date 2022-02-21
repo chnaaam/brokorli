@@ -26,11 +26,18 @@ class NerDataset(Dataset):
         # add predicate tokens into tokenizer
         self.tokenizer = tokenizer
         self.model_name = model_name
+        if self.model_name == "bert":
+            self.special_tokenizer_sep_indicator = "▁"
+            self.special_tokenizer_replaced_sep_indicator = " "
+        else:
+            self.special_tokenizer_sep_indicator = "##"
+            self.special_tokenizer_replaced_sep_indicator = ""
+            
         self.max_seq_len = max_seq_len
         self.tokens = []
         self.labels = []
         
-        cache_path = os.path.join(cache_dir, f"ner-{dataset_type}-data.cache")
+        cache_path = os.path.join(cache_dir, f"srl-{dataset_type}-{model_name}-data.cache")
         
         # we use cache file for improving data loading speed when cache file is existed in cache directory.
         # But file is not existed, then build dataset and save into cache file
@@ -39,6 +46,9 @@ class NerDataset(Dataset):
             for data in tqdm(data_list, desc=f"Load {dataset_type} data"):
                 sentence = data["sentence"]
                 entities = data["entities"]
+                
+                if not entities:
+                    continue
                 
                 """
                 entities example
@@ -128,8 +138,12 @@ class NerDataset(Dataset):
         for token_idx, token in enumerate(token_list):
             label = "O"
             
-            if token_idx == 0 and token.startswith("▁"):
-                token = token[1:]
+            if token_idx == 0:
+                if self.model_name == "bert":
+                    token = token[1:]
+            else:
+                if token.startswith(self.special_tokenizer_sep_indicator):
+                    token = token.replace(self.special_tokenizer_sep_indicator, self.special_tokenizer_replaced_sep_indicator)
             
             while token:
                 char_label = char_label_list.popleft()
