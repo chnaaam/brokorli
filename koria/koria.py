@@ -7,14 +7,12 @@ logger = logging.getLogger("koria")
 
 import torch.utils.data as data
 
-from . import MODEL_NAME_LIST
+from . import MODEL_NAME_LIST, OPTIMIZER_LIST
 from .config import get_data_gene_config
 from .utils import *
 from .data_loaders import load_data, DATASET_LIST
 from .tasks import TASK_LIST
 from .tokenizers import TOKENIZER_LIST, SPECIAL_TOKEN_LIST
-from .functions import CRITERION_LIST, OPTIMIZER_LIST, SCHEDULER_LIST
-
 
 class KoRIA:
     
@@ -56,6 +54,7 @@ class KoRIA:
         
         # Load dataset
         dataset_list = []
+        
         for dataset_type, data_list in [("train", train_data_list), ("valid", valid_data_list), ("test", test_data_list)]:
             dataset_list.append(DATASET_LIST[task_name](
                 tokenizer=tokenizer,
@@ -78,12 +77,6 @@ class KoRIA:
             parameter_cfg=self.cfg.parameters,
             
             # Selected LM Model
-            # Model List
-            # "bert": "monologg/kobert",
-            # "electra": "monologg/koelectra-base-v3-discriminator",
-            # "charelectra": "monologg/kocharelectra-base-discriminator",
-            # "roberta": "klue/roberta-base"
-            # 
             model_name=MODEL_NAME_LIST[task_cfg.model_name],
             model_type=task_cfg.model_type,
             
@@ -99,8 +92,6 @@ class KoRIA:
             
             # Optimizer, loss function, scheduler
             optimizer=OPTIMIZER_LIST[self.cfg.parameters.optimizer],
-            criterion=CRITERION_LIST[self.cfg.parameters.criterion],
-            scheduler=SCHEDULER_LIST[self.cfg.parameters.scheduler],
             
             # Use GPU or not
             use_cuda=self.cfg.use_cuda,

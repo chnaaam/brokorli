@@ -26,6 +26,7 @@ class NerDataset(Dataset):
         # add predicate tokens into tokenizer
         self.tokenizer = tokenizer
         self.model_name = model_name
+        
         if self.model_name == "bert":
             self.special_tokenizer_sep_indicator = "▁"
             self.special_tokenizer_replaced_sep_indicator = " "
@@ -37,7 +38,7 @@ class NerDataset(Dataset):
         self.tokens = []
         self.labels = []
         
-        cache_path = os.path.join(cache_dir, f"srl-{dataset_type}-{model_name}-data.cache")
+        cache_path = os.path.join(cache_dir, f"ner-{dataset_type}-{model_name}-data.cache")
         
         # we use cache file for improving data loading speed when cache file is existed in cache directory.
         # But file is not existed, then build dataset and save into cache file
@@ -125,8 +126,11 @@ class NerDataset(Dataset):
         
         # logger.info(f"Size of {dataset_type} dataset : ", len(self.tokens))
         
-    def convert_word_pos_to_char_pos(self, sentence, arguments):        
-        char_label_list = ["O" for _ in range(len(sentence) + 2)]
+    def convert_word_pos_to_char_pos(self, sentence, arguments):
+        if self.model_name == "bert":
+            char_label_list = ["O" for _ in range(len(sentence) + 1)]
+        else:
+            char_label_list = ["O" for _ in range(len(sentence.replace(" ", "")) + 1)]
 
         for argument in arguments:
             begin_idx = int(argument["begin"])

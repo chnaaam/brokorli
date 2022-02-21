@@ -52,14 +52,12 @@ class NER(TaskBase):
                     token_type_ids=token_type_ids_tensor,
                     attention_mask=(token_tensor != self.token_pad_id).float(),
                     labels=label_tensor,
-                    crf_masks=(token_tensor != self.token_pad_id)
+                    # crf_masks=(token_tensor != self.token_pad_id)
                 )
                 
                 loss = outputs[0]
                 
                 self.accelerator.backward(loss)
-                
-                torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
                 
                 self.optimizer.step()
                 self.scheduler.step()  
@@ -96,7 +94,7 @@ class NER(TaskBase):
                     token_type_ids=token_type_ids_tensor,
                     attention_mask=(token_tensor != self.token_pad_id).float(),
                     labels=label_tensor,
-                    crf_masks=(token_tensor != self.token_pad_id)
+                    # crf_masks=(token_tensor != self.token_pad_id)
                 )
                 
                 loss = outputs[0]

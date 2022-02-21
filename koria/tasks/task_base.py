@@ -27,13 +27,7 @@ class TaskBase(metaclass=ABCMeta):
         
         # Optimizer
         self.optimizer_func = parameters["optimizer"]
-        
-        # Loss function
-        self.criterion = parameters["criterion"]()
-        
-        # Scheduler
-        self.scheduler_func = parameters["scheduler"]
-        
+      
         # Use gpu
         self.use_cuda = False
         if "use_cuda" in parameters:
@@ -56,27 +50,11 @@ class TaskBase(metaclass=ABCMeta):
         
         self.tokenizer = parameters["tokenizer"]
         
-        # param_optimizer = list(self.model.named_parameters())
-        # no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
-        # optimizer_grouped_parameters = [
-        #     {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': self.cfg.weight_decay},
-        #     {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
-        # ]
-        
         self.optimizer = parameters["optimizer"](
-            # optimizer_grouped_parameters,
             self.model.parameters(),
             lr=float(self.cfg.learning_rate)
         )
-        
-        total_steps = len(self.train_data_loader) * self.cfg.epochs
-
-        self.scheduler = get_linear_schedule_with_warmup(
-            self.optimizer, 
-            num_warmup_steps = 0,
-            num_training_steps = total_steps)
-        
-        
+                
         self.device = self.accelerator.device
         
         self.model.to(self.device)
