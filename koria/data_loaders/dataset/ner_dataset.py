@@ -1,6 +1,10 @@
+from asyncio.log import logger
 import os
 import pickle
 import torch
+import logging
+
+logger = logging.getLogger("koria")
 
 from collections import deque
 from tqdm import tqdm
@@ -103,7 +107,9 @@ class NerDataset(Dataset):
             self.l2i = data["l2i"]
             self.vocab = list(set(self.l2i.keys()))
             self.i2l = {i: l for l, i in self.l2i.items()}
-            
+        
+        logger.info(f"Size of {dataset_type} dataset : ", len(self.tokens))
+        
     def convert_word_pos_to_char_pos(self, sentence, arguments):        
         char_label_list = ["O" for _ in range(len(sentence) + 2)]
 
