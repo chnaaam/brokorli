@@ -116,5 +116,15 @@ class KoRIA:
         # Train
         task.train()
     
-    def predict(self):
-        pass
+    def predict(self, task_name):
+        if task_name in vars(self.cfg.tasks).keys():
+            task_cfg = vars(self.cfg.tasks)[task_name]
+        else:
+            raise ValueError(f"The task is not defined. Define the {task_name} task.")
+        
+        tokenizer = TOKENIZER_LIST[task_cfg.model_name].from_pretrained(MODEL_NAME_LIST[task_cfg.model_name])
+        
+        # Add special tokens in tokenizer
+        tokenizer.add_special_tokens({"additional_special_tokens": list(SPECIAL_TOKEN_LIST[task_name].values())})
+        
+        

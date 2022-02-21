@@ -52,13 +52,11 @@ class NER(TaskBase):
                     token_type_ids=token_type_ids_tensor,
                     attention_mask=(token_tensor != self.token_pad_id).float(),
                     labels=label_tensor,
-                    # crf_masks=(token_tensor != self.token_pad_id)
                 )
                 
                 loss = outputs[0]
                 
                 self.accelerator.backward(loss)
-                
                 self.optimizer.step()
                 
                 train_losses.append(loss.item())
@@ -93,7 +91,6 @@ class NER(TaskBase):
                     token_type_ids=token_type_ids_tensor,
                     attention_mask=(token_tensor != self.token_pad_id).float(),
                     labels=label_tensor,
-                    # crf_masks=(token_tensor != self.token_pad_id)
                 )
                 
                 loss = outputs[0]
