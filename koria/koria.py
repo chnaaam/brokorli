@@ -57,6 +57,7 @@ class KoRIA:
         for dataset_type, data_list in [("train", train_data_list), ("valid", valid_data_list), ("test", test_data_list)]:
             dataset_list.append(DATASET_LIST[task_name](
                 tokenizer=tokenizer,
+                task_name=task_name,
                 special_tokens=SPECIAL_TOKEN_LIST[task_name] if task_name in SPECIAL_TOKEN_LIST else None,
                 model_name=task_cfg.model_name,
                 data_list=data_list, 

@@ -1,92 +1,100 @@
-from asyncio.log import logger
-import os
-import pickle
 import torch
 import logging
 
 logger = logging.getLogger("koria")
 
-from collections import deque
-from tqdm import tqdm
-from torch.utils.data import Dataset
+from . import DatasetBase
 
 
-class MrcDataset(Dataset):
+class MrcDataset(DatasetBase):
     
-    def __init__(self, tokenizer, model_name, data_list, cache_dir, vocab_dir, dataset_type="train", max_seq_len=256, special_tokens=None):
-        super().__init__()
+    def __init__(
+        self, 
+        tokenizer, 
+        task_name, 
+        model_name, 
+        data_list, 
+        cache_dir, 
+        vocab_dir, 
+        dataset_type="train", 
+        max_seq_len=256, 
+        special_tokens=None):
         
-        # Definition of special tokens
-        self.LABEL_PAD_TOKEN = "<PAD>"
+        super().__init__(
+            tokenizer=tokenizer,
+            task_name=task_name,
+            model_name=model_name,
+            data_list=data_list,
+            cache_dir=cache_dir,
+            vocab_dir=vocab_dir,
+            dataset_type=dataset_type,
+            max_seq_len=max_seq_len,
+            special_tokens=special_tokens,
+            build_dataset_func=self.build_dataset
+        )
         
-        self.SPECIAL_LABEL_TOKENS = {
-            "pad": self.LABEL_PAD_TOKEN
+    def build_dataset(self, data):
+        context = data["context"]
+        question = data["question"]
+        answer = data["answer"]
+
+        try:
+            context_token_list = self.tokenizer.tokenize(context)
+            question_token_list = self.tokenizer.tokenize(question)
+            
+            answer = self.adjust_answer_position(context_tokens=context_token_list, answer=answer)
+            
+            return {
+                "context": context_token_list,
+                "question": question_token_list,
+                "answer": answer
+            }
+            
+        except IndexError:
+            return None
+    
+    def adjust_answer_position(self, context_tokens, answer):
+        # BERT
+        token_start_idx = 0
+        token_end_idx = 0
+        
+        answer_begin_idx = answer["begin"]
+        answer_end_idx = answer["end"]
+        adjusted_answer = {
+            "begin": -1,
+            "end": -1
         }
-    
-        # add predicate tokens into tokenizer
-        self.tokenizer = tokenizer
-        self.model_name = model_name
         
-        if self.model_name == "bert":
-            self.special_tokenizer_sep_indicator = "▁"
-            self.special_tokenizer_replaced_sep_indicator = " "
-        else:
-            self.special_tokenizer_sep_indicator = "##"
-            self.special_tokenizer_replaced_sep_indicator = ""
+        for token_idx, context_token in enumerate(context_tokens):
             
-        self.max_seq_len = max_seq_len
-        self.context_tokens = []
-        self.question_tokens = []
-        self.answers = []
+            if context_token.startswith("▁"):
+                context_token.replace("▁", " ")
+            
+            if token_idx == 0:
+                context_token = context_token[1:]
+                token_start_idx = token_end_idx
+            else:
+                token_start_idx = token_end_idx + 1
+            token_end_idx = token_start_idx + len(context_token) - 1
+            
+            
+            if token_start_idx <= answer_begin_idx <= token_end_idx \
+                and token_start_idx <= answer_end_idx <= token_end_idx:
+                    adjusted_answer["begin"] = token_idx
+                    adjusted_answer["end"] = token_idx
+            
+            elif answer_begin_idx <= token_start_idx <= answer_end_idx \
+                or answer_begin_idx <= token_start_idx <= answer_end_idx \
+                or token_start_idx <= answer_begin_idx <= token_end_idx \
+                or token_start_idx <= answer_end_idx <= token_end_idx:
+                    
+                if adjusted_answer["begin"] == -1:
+                    adjusted_answer["begin"] = token_idx
+                else:
+                    adjusted_answer["end"] = token_idx
+            
         
-        cache_path = os.path.join(cache_dir, f"mrc-{dataset_type}-{model_name}-data.cache")
-        
-        # We use cache file for improving data loading speed when cache file is existed in cache directory.
-        # But file is not existed, then build dataset and save into cache file
-        if not os.path.isfile(cache_path):
-            
-            for data in tqdm(data_list, desc=f"Load {dataset_type} data"):
-                context = data["context"]
-                question = data["question"]
-                answer = data["answer"]
-
-                try:
-                    context_token_list = tokenizer.tokenize(context)
-                    question_token_list = tokenizer.tokenize(question)
-                    
-                    answer = self.adjust_answer_position(context_tokens=context_token_list, question_tokens=question_token_list, answer=answer)
-                    
-                    self.context_tokens.append(context_token_list)
-                    self.question_tokens.append(question_token_list)
-                    self.answers.append(answer)
-                    
-                except IndexError:
-                    pass
-            
-            # Save cache file
-            with open(cache_path, "wb") as fp:
-                pickle.dump({
-                    "context_tokens": self.context_tokens, 
-                    "question_tokens": self.question_tokens,
-                    "answers": self.answers
-                }, fp)
-                    
-        else:
-            # Load cache and vocab files
-            with open(cache_path, "rb") as fp:
-                data = pickle.load(fp)
-                
-            if "tokens" not in data.keys() or "labels" not in data.keys():
-                raise KeyError("Invalid cache file. Please cache file and run it again")
-            
-            self.tokens = data["tokens"]
-            self.labels = data["labels"]
-        
-    def adjust_answer_position(self, context_tokens, question_tokens, answer):
         return answer
-    
-    def __len__(self):
-        return len(self.tokens)
     
     def __getitem__(self, idx):
         token_list = [self.tokenizer.cls_token] + self.tokens[idx]
