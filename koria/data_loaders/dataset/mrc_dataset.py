@@ -39,17 +39,17 @@ class MrcDataset(Dataset):
         self.question_tokens = []
         self.answers = []
         
-        cache_path = os.path.join(cache_dir, f"ner-{dataset_type}-{model_name}-data.cache")
+        cache_path = os.path.join(cache_dir, f"mrc-{dataset_type}-{model_name}-data.cache")
         
-        # we use cache file for improving data loading speed when cache file is existed in cache directory.
+        # We use cache file for improving data loading speed when cache file is existed in cache directory.
         # But file is not existed, then build dataset and save into cache file
         if not os.path.isfile(cache_path):
             
             for data in tqdm(data_list, desc=f"Load {dataset_type} data"):
                 context = data["context"]
-                question = data["entities"]
+                question = data["question"]
                 answer = data["answer"]
-            
+
                 try:
                     context_token_list = tokenizer.tokenize(context)
                     question_token_list = tokenizer.tokenize(question)

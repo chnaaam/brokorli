@@ -95,7 +95,12 @@ def load_data(task_cfg, task_name):
             
             if not train_data_list and not valid_data_list and not test_data_list:
                 raise ValueError("Dataset is empty")
-            
+        
+        elif "train" in task_cfg.dataset.__dict__ and "valid" in task_cfg.dataset.__dict__ and "test" in task_cfg.dataset.__dict__:
+            train_data_list = DATA_LIST[task_name](dataset_path=os.path.join(task_cfg.dataset.path, task_cfg.dataset.train)).data
+            valid_data_list = DATA_LIST[task_name](dataset_path=os.path.join(task_cfg.dataset.path, task_cfg.dataset.valid)).data
+            test_data_list = DATA_LIST[task_name](dataset_path=os.path.join(task_cfg.dataset.path, task_cfg.dataset.test)).data
+        
         else:
             raise ValueError("The parameter of data is None")
     else:

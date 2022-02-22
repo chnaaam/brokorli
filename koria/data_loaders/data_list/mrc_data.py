@@ -27,5 +27,9 @@ class MrcData(DataBase):
                     self.data.append({
                         "context": context,
                         "question": question,
-                        "answers": answers[0]
+                        "answer": {
+                            "text": answers[0]["text"],
+                            "start": int(answers[0]["answer_start"]),
+                            "end": int(answers[0]["answer_start"]) + int(len(answers[0]["text"])) - 1
+                        }
                     })
