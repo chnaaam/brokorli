@@ -1,5 +1,6 @@
 from .semantic_role_labeling import SRL
 from .named_entity_recognition import NER
+from .machine_reading_comprehension import MRC
 
 """
 TASK_LIST는 정의한 Task 클래스 들을 갖고 있습니다.
@@ -13,5 +14,6 @@ Example
 
 TASK_LIST = {
     "srl": SRL,
-    "ner": NER
+    "ner": NER,
+    "mrc": MRC
 }
