@@ -2,7 +2,8 @@ import os
 import json
 from tqdm import tqdm
 
-from . import DataBase
+# from . import DataBase
+from koria.data_loaders.data_list.data_base import DataBase
 
 class MrcData(DataBase):
     
@@ -15,15 +16,16 @@ class MrcData(DataBase):
         super().__init__(dataset_path=dataset_path)
         
         for data in tqdm(self.dump["data"], desc=f"Load dataset"):
-            print(data)
-            # sentences = document["sentence"]
             
-            # for sentence in sentences:
-            #     form = sentence["form"]
-            #     ne_list = sentence["NE"]
+            for paragraph in data["paragraphs"]:
+                context = paragraph["context"]        
                 
-            #     self.data.append({
-            #         "sentence": form,
-            #         "entities": ne_list,
-            #     })
-                   
+                for qas in paragraph["qas"]:
+                    question = qas["question"]
+                    answers = qas["answers"]
+                    
+                    self.data.append({
+                        "context": context,
+                        "question": question,
+                        "answers": answers[0]
+                    })
