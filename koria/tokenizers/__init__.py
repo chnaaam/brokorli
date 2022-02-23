@@ -45,8 +45,9 @@ Example
 """
 
 TOKENIZER_LIST = {
-    "bert": KoBertTokenizer,
+    "bert": AutoTokenizer,
+    "kobert": KoBertTokenizer,
     "electra": AutoTokenizer,
-    "charelectra": KoCharElectraTokenizer,
+    "kocharelectra": KoCharElectraTokenizer,
     "roberta": AutoTokenizer
 }
