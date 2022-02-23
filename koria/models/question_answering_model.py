@@ -13,7 +13,8 @@ class QuestionAnsweringModel(nn.Module):
     def forward(self, X, **parameters):
         token_type_ids = parameters["token_type_ids"]
         attention_mask = parameters["attention_mask"]
-        labels = parameters["labels"]
+        start_positions = parameters["start_positions"]
+        end_positions = parameters["end_positions"]
         
         # TODO: Roberta does not need token_type_ids
         if "roberta" not in self.model_name:
@@ -21,13 +22,15 @@ class QuestionAnsweringModel(nn.Module):
                 X,
                 token_type_ids=token_type_ids,
                 attention_mask=attention_mask,
-                labels=labels,
+                start_positions=start_positions,
+                end_positions=end_positions,
             )
         else:
             outputs = self.model(
                 X,
                 attention_mask=attention_mask,
-                labels=labels,
+                start_positions=start_positions,
+                end_positions=end_positions,
             )
             
         return outputs

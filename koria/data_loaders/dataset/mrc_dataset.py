@@ -152,8 +152,6 @@ class MrcDataset(DatasetBase):
         token_list = [self.tokenizer.cls_token] + question_tokens + [self.tokenizer.sep_token] + context_tokens
         
         token_ids = self.tokenizer.convert_tokens_to_ids(token_list)
-        token_type_ids = [1] * len(token_list)
+        token_type_ids = [0] * len([self.tokenizer.cls_token] + question_tokens + [self.tokenizer.sep_token]) + [1] * len(context_tokens)
         
-        
-        
-        return torch.tensor(token_ids), torch.tensor(token_type_ids), torch.tensor([answer_begin_idx, answer_end_idx])
+        return torch.tensor(token_ids), torch.tensor(token_type_ids), torch.tensor(answer_begin_idx), torch.tensor(answer_end_idx)

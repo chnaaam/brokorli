@@ -39,11 +39,12 @@ class MRC(TaskBase):
             for data in progress_bar:
                 progress_bar.set_description(f"[Training] Epoch : {epoch}, Avg Loss : {avg_train_loss:.4f}")
                 
-                token_tensor, token_type_ids_tensor, label_tensor = data
+                token_tensor, token_type_ids_tensor, answer_begin_idx_tensor, answer_end_idx_tensor = data
                 
                 token_tensor.to(self.device)
                 token_type_ids_tensor.to(self.device)
-                label_tensor.to(self.device)
+                answer_begin_idx_tensor.to(self.device)
+                answer_end_idx_tensor.to(self.device)
                 
                 self.optimizer.zero_grad()
                 
@@ -51,10 +52,11 @@ class MRC(TaskBase):
                     token_tensor, 
                     token_type_ids=token_type_ids_tensor,
                     attention_mask=(token_tensor != self.token_pad_id).float(),
-                    labels=label_tensor,
+                    start_positions=answer_begin_idx_tensor,
+                    end_positions=answer_end_idx_tensor,
                 )
                 
-                loss = outputs[0]
+                loss = outputs["loss"]
                 
                 self.accelerator.backward(loss)
                 self.optimizer.step()
