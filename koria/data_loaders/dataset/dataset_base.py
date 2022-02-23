@@ -51,7 +51,7 @@ class DatasetBase(Dataset, metaclass=ABCMeta):
     def build(self):
         # We use cache file for improving data loading speed when cache file is existed in cache directory.
         # But file is not existed, then build dataset and save into cache file
-        cache_path = os.path.join(self.cache_dir, f"{self.task_name}-{self.dataset_type}-{self.model_name}-data.cache")
+        cache_path = os.path.join(self.cache_dir, f"{self.dataset_type}-{self.task_name}-{self.model_name}-data.cache")
         
         if not os.path.isfile(cache_path):
             for data in tqdm(self.data_list, desc=f"Load {self.dataset_type} data"):

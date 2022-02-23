@@ -48,18 +48,24 @@ DATASET_LIST = {
     "mrc": MrcDataset
 }
 
-def load_data(task_cfg, task_name):
+def load_data(task_cfg, task_name, model_name, cache_dir):
     # Load data when data parameter in configuration file is existed.
     # If data parameter is not existed, load train, valid, test dataset using configuration file.
     # Therefore, parameters must be added between dataset file names or specific dataset(train, valid, test) file names.
     
+    # If three file is not existed, data is loaded
+    train_data_list, valid_data_list, test_data_list = None, None, None
+    
+    # Chat that cache file is existed
+    cache_file_list = [fn for fn in os.listdir(cache_dir) if f"{task_name}-{model_name}-data.cache" in fn]
+    
+    if len(cache_file_list) == 3:
+        return None, None, None
+        
     # Check that train, valid, test file is existed
     train_data_path = os.path.join(task_cfg.dataset.path, f"{task_name}.train")
     valid_data_path = os.path.join(task_cfg.dataset.path, f"{task_name}.valid")
     test_data_path = os.path.join(task_cfg.dataset.path, f"{task_name}.test")
-    
-    # If three file is not existed, data is loaded
-    train_data_list, valid_data_list, test_data_list = None, None, None
     
     if not os.path.exists(train_data_path) or not os.path.exists(valid_data_path) or not os.path.exists(test_data_path):        
         if "data" in task_cfg.dataset.__dict__:

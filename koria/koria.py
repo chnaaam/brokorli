@@ -49,7 +49,11 @@ class KoRIA:
         # Load data
         logger.info(f"Load data")
         
-        train_data_list, valid_data_list, test_data_list = load_data(task_cfg=task_cfg, task_name=task_name)
+        train_data_list, valid_data_list, test_data_list = load_data(
+            task_cfg=task_cfg, 
+            task_name=task_name, 
+            model_name=task_cfg.model_name, 
+            cache_dir=os.path.join(self.cfg.path.root, self.cfg.path.cache))
         
         # Load dataset
         dataset_list = []
