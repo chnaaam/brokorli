@@ -1,3 +1,4 @@
+from tkinter import E
 import torch
 import logging
 
@@ -94,22 +95,65 @@ class MrcDataset(DatasetBase):
                     adjusted_answer["end"] = token_idx
             
         
-        return answer
+        return adjusted_answer
     
     def __getitem__(self, idx):
-        token_list = [self.tokenizer.cls_token] + self.tokens[idx]
-        label_list = ["O"] + self.labels[idx]
+        context_tokens = self.dataset[idx]["context"]
+        question_tokens = self.dataset[idx]["question"]
         
-        if len(token_list) <= self.max_seq_len:
-            token_list += [self.tokenizer.pad_token] * (self.max_seq_len - len(token_list))
-            label_list += [self.LABEL_PAD_TOKEN] * (self.max_seq_len - len(label_list))
-        else:
-            token_list = token_list[:self.max_seq_len]
-            label_list = label_list[:self.max_seq_len]
+        answer_begin_idx = self.dataset[idx]["answer"]["begin"]
+        answer_end_idx = self.dataset[idx]["answer"]["end"]
+        
+        len_c_tokens = len(context_tokens)
+        len_q_tokens = len(question_tokens)
+        
+        # huggingface run_squad.py idea
+        doc_stride = 64
+        
+        adjusted_len_c_tokens = self.max_seq_len - 2 - len_q_tokens
+        
+        if adjusted_len_c_tokens < len_c_tokens:
             
+            begin_doc_stride = doc_stride
+            end_doc_stride = doc_stride
+            
+            if answer_begin_idx - begin_doc_stride < 0:
+                begin_doc_stride = 0
+            
+            if answer_end_idx + end_doc_stride > len_c_tokens:
+                # end_doc_stride = answer_end_idx + end_doc_stride - len_c_tokens
+                end_doc_stride = len_c_tokens - answer_end_idx
+                
+            if answer_end_idx + end_doc_stride > adjusted_len_c_tokens:
+                # TODO ...
+                
+                # Context token slide window
+                ct_end_idx = answer_end_idx + end_doc_stride
+                ct_begin_idx = ct_end_idx - adjusted_len_c_tokens
+                
+                
+                # Adjust answer begin and end index
+                answer_be_interval = answer_end_idx - answer_begin_idx
+                
+                answer_end_idx = adjusted_len_c_tokens - end_doc_stride
+                answer_begin_idx = answer_end_idx - answer_be_interval
+                
+            else:
+                ct_begin_idx = 0
+                ct_end_idx = adjusted_len_c_tokens
+                
+            context_tokens = context_tokens[ct_begin_idx: ct_end_idx]
+        else:
+            context_tokens += [self.tokenizer.pad_token] * (adjusted_len_c_tokens - len_c_tokens)
+            
+        answer_begin_idx += len_q_tokens + 2
+        answer_end_idx += len_q_tokens + 2
+        
+        token_list = [self.tokenizer.cls_token] + question_tokens + [self.tokenizer.sep_token] + context_tokens
+        
         token_ids = self.tokenizer.convert_tokens_to_ids(token_list)
         token_type_ids = [1] * len(token_list)
-        label_ids = [self.l2i[label] for label in label_list]
         
         
-        return torch.tensor(token_ids), torch.tensor(token_type_ids), torch.tensor(label_ids)
+        
+        return torch.tensor(token_ids), torch.tensor(token_type_ids), torch.tensor([answer_begin_idx, answer_end_idx])
