@@ -4,7 +4,7 @@ from tqdm import tqdm
 
 from .task_base import TaskBase
 
-from koria.metrics import calculate_squad_f1_score, calculate_em_score
+from koria.metrics import calculate_qa_f1_score, calculate_em_score
 
 class MRC(TaskBase):
 
@@ -120,7 +120,7 @@ class MRC(TaskBase):
                     pred_begin_indexes.tolist(), 
                     pred_end_indexes.tolist())
                 
-                f1_score = calculate_squad_f1_score(true_answers, pred_answers)
+                f1_score = calculate_qa_f1_score(true_answers, pred_answers)
                 em_score = calculate_em_score(true_answers, pred_answers)
                         
                 valid_f1_scores.append(f1_score)

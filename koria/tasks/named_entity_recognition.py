@@ -4,7 +4,7 @@ from tqdm import tqdm
 
 from .task_base import TaskBase
 
-from koria.metrics.f1_score import calculate_f1_score
+from koria.metrics.f1_score import calculate_sl_f1_score
 
 class NER(TaskBase):
 
@@ -101,7 +101,7 @@ class NER(TaskBase):
                 valid_losses.append(loss.item())
                 true_y, pred_y = self.decode(label_tensor, pred_tags)
                 
-                score = calculate_f1_score(true_y, pred_y)
+                score = calculate_sl_f1_score(true_y, pred_y)
                         
                 valid_f1_scores.append(score)
                 

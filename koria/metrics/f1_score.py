@@ -3,19 +3,21 @@ import collections
 from seqeval.metrics import f1_score
 from seqeval.scheme import IOBES
 
-def calculate_f1_score(true_y, pred_y):
+# F1 score for sequence labeling
+def calculate_sl_f1_score(true_y, pred_y):
     """
     Calculate the F1 score for the BIOES tagged sequence labeling task.
     """
     return f1_score(true_y, pred_y, mode="strict", scheme=IOBES)
 
-def calculate_squad_f1_score(true_answers, pred_answers):
+# F1 score for question answering
+def calculate_qa_f1_score(true_answers, pred_answers):
     
     f1_score_list = []
     
     for true_answer, pred_answer in zip(true_answers, pred_answers):
         
-        # huggingface compute_f1
+        # refer to huggingface compute_f1 function
         common_tokens = collections.Counter(list(true_answer)) & collections.Counter(list(pred_answer))
         num_same = sum(common_tokens.values())
         
