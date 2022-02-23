@@ -1,2 +1,2 @@
-from .f1_score import calculate_f1_score
+from .f1_score import calculate_f1_score, calculate_squad_f1_score
 from .exact_match_score import calculate_em_score
