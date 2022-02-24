@@ -131,6 +131,33 @@ class KoRIA:
         tokenizer = TOKENIZER_LIST[task_cfg.model_name].from_pretrained(MODEL_NAME_LIST[task_cfg.model_name])
         
         # Add special tokens in tokenizer
-        tokenizer.add_special_tokens({"additional_special_tokens": list(SPECIAL_TOKEN_LIST[task_name].values())})
+        if task_name in SPECIAL_TOKEN_LIST:
+            tokenizer.add_special_tokens({"additional_special_tokens": list(SPECIAL_TOKEN_LIST[task_name].values())})
+            
+        task = TASK_LIST[task_name](
+            
+            # Configuration for training
+            parameter_cfg=self.cfg.parameters,
+            
+            # Selected LM Model
+            model_name=MODEL_NAME_LIST[task_cfg.model_name],
+            model_type=task_cfg.model_type,
+            
+            # Tokenizer
+            tokenizer=tokenizer,
+            
+            # Use GPU or not
+            use_cuda=self.cfg.use_cuda,
+            
+            # The model hub is a directory where models are stored when model training is over.
+            model_hub_path=os.path.join(self.cfg.path.root, self.cfg.path.model),
+            
+            # Optional Parameters
+            # If a special token is added, the input size of the model is adjusted.
+            vocab_size=len(tokenizer),
+        )
+        
+        task.predict(sentence="홍길동의 아버지는 홍판서이다.", question="홍길동의 아버지는 누구인가?")
+        
         
         

@@ -53,8 +53,8 @@ if __name__ == "__main__":
     
     if args.type == "train":
         koria.train(task_name=args.task_name)
-    # elif args.type == "predict":
-    #     koria.predict()
+    elif args.type == "predict":
+        koria.predict(task_name=args.task_name)
     else:
         raise NotImplementedError()
     

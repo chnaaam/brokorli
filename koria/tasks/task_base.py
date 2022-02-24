@@ -21,13 +21,19 @@ class TaskBase(metaclass=ABCMeta):
         self.cfg = parameters["parameter_cfg"]
         
         # Data loader
-        self.train_data_loader = parameters["data_loader"]["train"]
-        self.valid_data_loader = parameters["data_loader"]["valid"]
-        self.test_data_loader = parameters["data_loader"]["test"]
         
-        # Optimizer
-        self.optimizer_func = parameters["optimizer"]
-      
+        if "data_loader" in parameters:
+            if "train" in parameters["data_loader"]:
+                self.train_data_loader = parameters["data_loader"]["train"]
+            
+            if "valid" in parameters["data_loader"]:
+                self.valid_data_loader = parameters["data_loader"]["valid"]
+                
+            if "test" in parameters["data_loader"]:
+                self.test_data_loader = parameters["data_loader"]["test"]
+        else:
+            self.train_data_loader, self.valid_data_loader, self.test_data_loader = None, None, None
+            
         # Use gpu
         self.use_cuda = False
         if "use_cuda" in parameters:
@@ -50,10 +56,14 @@ class TaskBase(metaclass=ABCMeta):
         
         self.tokenizer = parameters["tokenizer"]
         
-        self.optimizer = parameters["optimizer"](
-            self.model.parameters(),
-            lr=float(self.cfg.learning_rate)
-        )
+        # Optimizer
+        if "optimizer" in parameters:
+            self.optimizer = parameters["optimizer"](
+                self.model.parameters(),
+                lr=float(self.cfg.learning_rate)
+            )
+        else:
+            self.optimizer = None
                 
         self.device = self.accelerator.device
         
@@ -67,6 +77,9 @@ class TaskBase(metaclass=ABCMeta):
             
     def save_model(self, path):
         torch.save(self.model.state_dict(), path)
+    
+    def load_model(self, path):
+        self.model.load_state_dict(torch.load(path))
     
     @abstractmethod
     def train(self):

@@ -9,22 +9,9 @@ from koria.metrics import calculate_qa_f1_score, calculate_em_score
 class MRC(TaskBase):
 
     def __init__(self, **parameters):
-        self.vocab_size = parameters["vocab_size"]
-        self.label_size = parameters["label_size"]
-        
-        self.token_pad_id = parameters["token_pad_id"]
-        self.l2i = parameters["l2i"]
-        self.i2l = parameters["i2l"]
-        self.special_label_tokens = parameters["special_label_tokens"]
-        
-        # Set optional parameter for SRL Task
-        MODEL_INIT_PARAMETERS = {
-            "vocab_size": self.vocab_size,
-            "label_size": self.label_size
-        }
-        
+                
         # Set common parameters for TaskBase and build model
-        super().__init__(model_parameters=MODEL_INIT_PARAMETERS, **parameters)
+        super().__init__(model_parameters=None, **parameters)
         
     def train(self):
         
@@ -93,9 +80,7 @@ class MRC(TaskBase):
                 attention_mask = attention_mask.to(self.device)
                 answer_begin_idx_tensor = answer_begin_idx_tensor.to(self.device)
                 answer_end_idx_tensor = answer_end_idx_tensor.to(self.device)
-                
-                self.optimizer.zero_grad()
-                
+                                
                 outputs = self.model(
                     token_tensor, 
                     token_type_ids=token_type_ids_tensor,
@@ -135,8 +120,55 @@ class MRC(TaskBase):
     def test(self):
         pass
     
-    def predict(self):
-        pass
+    def predict(self, sentence, question):
+        self.load_model(path=os.path.join(self.model_hub_path, "mrc.mdl"))
+        self.model.eval()
+        
+        with torch.no_grad():
+            sentence_tokens = self.tokenizer.tokenize(sentence)
+            question_tokens = self.tokenizer.tokenize(question)
+            
+            max_seq_len = 386#self.cfg.max_seq_len
+            token_list = [self.tokenizer.cls_token] + question_tokens + [self.tokenizer.sep_token]
+            len_question_token_list = len(token_list)
+            
+            if len(sentence_tokens) > max_seq_len - len_question_token_list:
+                sentence_tokens = sentence_tokens[:max_seq_len - len_question_token_list]
+            else:
+                sentence_tokens = sentence_tokens + [self.tokenizer.pad_token] * (max_seq_len - len_question_token_list - len(sentence_tokens))
+            
+            token_list = token_list + sentence_tokens
+            
+            token_ids = self.tokenizer.convert_tokens_to_ids(token_list)
+            token_type_ids = [0] * len([self.tokenizer.cls_token] + question_tokens + [self.tokenizer.sep_token]) + [1] * len(sentence_tokens)
+            
+            token_tensor, token_type_ids_tensor = torch.tensor([token_ids]), torch.tensor([token_type_ids])
+            attention_mask = (token_tensor != self.tokenizer.pad_token_id).float()
+            
+            self.model.to(self.device)
+            
+            token_tensor = token_tensor.to(self.device)
+            token_type_ids_tensor = token_type_ids_tensor.to(self.device)
+            attention_mask = attention_mask.to(self.device)
+                            
+            outputs = self.model(
+                token_tensor, 
+                token_type_ids=token_type_ids_tensor,
+                attention_mask=attention_mask,
+                start_positions=None,
+                end_positions=None,
+            )
+            
+            start_logits = outputs["start_logits"]
+            end_logits = outputs["end_logits"]
+            
+            pred_begin_indexes = torch.argmax(start_logits, dim=-1)
+            pred_end_indexes = torch.argmax(end_logits, dim=-1)
+            
+            answer = self.tokenizer.convert_tokens_to_string(token_list[pred_begin_indexes: pred_end_indexes + 1])
+            
+            print(answer)
+            return answer
         
     def decode(self, token_tensor, true_begin_indexes, true_end_indexes, pred_begin_indexes, pred_end_indexes):
         true_answers, pred_answers = [], []

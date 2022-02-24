@@ -8,4 +8,6 @@ cache/
 data/
 venv/
 model/
+hub/
 test.py
+task_performance.txt
