@@ -3,9 +3,9 @@ import torch.optim as optim
 MODEL_NAME_LIST = {
     "bert": "bert-base-multilingual-cased",
     "kobert": "monologg/kobert",
-    "electra": "monologg/koelectra-base-v3-discriminator",
+    "koelectra": "monologg/koelectra-base-v3-discriminator",
     "kocharelectra": "monologg/kocharelectra-base-discriminator",
-    "roberta": "klue/roberta-base"
+    "klueroberta": "klue/roberta-base"
 }
 
 OPTIMIZER_LIST = {

@@ -1,4 +1,5 @@
 import torch
+from collections import deque
 import logging
 
 logger = logging.getLogger("koria")
@@ -41,9 +42,10 @@ class MrcDataset(DatasetBase):
         try:
             context_token_list = self.tokenizer.tokenize(context)
             question_token_list = self.tokenizer.tokenize(question)
-            
-            answer = self.adjust_answer_position(context_tokens=context_token_list, answer=answer)
-            
+            print(context)
+            print(context[answer["begin"]: answer["end"] + 1])
+            answer = self.adjust_answer_position(context_tokens=context_token_list, answer=answer, context=context)
+            print(context_token_list[answer["begin"]: answer["end"] + 1])
             return {
                 "context": context_token_list,
                 "question": question_token_list,
@@ -53,10 +55,10 @@ class MrcDataset(DatasetBase):
         except IndexError:
             return None
     
-    def adjust_answer_position(self, context_tokens, answer):
+    def adjust_answer_position(self, context_tokens, answer, context):
         # BERT
-        token_start_idx = 0
-        token_end_idx = 0
+        context_idx = 0
+        token_idx = 0
         
         answer_begin_idx = answer["begin"]
         answer_end_idx = answer["end"]
@@ -65,35 +67,50 @@ class MrcDataset(DatasetBase):
             "end": -1
         }
         
-        for token_idx, context_token in enumerate(context_tokens):
-            
-            if context_token.startswith("▁"):
-                context_token.replace("▁", " ")
-            
-            if token_idx == 0:
-                context_token = context_token[1:]
-                token_start_idx = token_end_idx
-            else:
-                token_start_idx = token_end_idx + 1
-            token_end_idx = token_start_idx + len(context_token) - 1
-            
-            
-            if token_start_idx <= answer_begin_idx <= token_end_idx \
-                and token_start_idx <= answer_end_idx <= token_end_idx:
-                    adjusted_answer["begin"] = token_idx
-                    adjusted_answer["end"] = token_idx
-            
-            elif answer_begin_idx <= token_start_idx <= answer_end_idx \
-                or answer_begin_idx <= token_start_idx <= answer_end_idx \
-                or token_start_idx <= answer_begin_idx <= token_end_idx \
-                or token_start_idx <= answer_end_idx <= token_end_idx:
-                    
-                if adjusted_answer["begin"] == -1:
-                    adjusted_answer["begin"] = token_idx
-                else:
-                    adjusted_answer["end"] = token_idx
-            
+        cq = deque(list(context))
+        ctq = deque(context_tokens)
         
+        # Context Character Index, Context Character
+        while cq:
+            c = cq.popleft()
+            token = ctq.popleft()
+            
+            if self.model_name in ["kobert"]:
+                if token.startswith("▁"):
+                    if context_idx == 0:
+                        token = token.replace("▁", "")
+                    else:
+                        token = token.replace("▁", " ")
+            else:
+                if token.startswith("##"):
+                    token = token.replace("##", "")
+            
+            while c != token[0]:
+                c = cq.popleft()
+                context_idx += 1
+            
+            while token:
+                t = token[0]
+                token = token[1:]
+                
+                if t == c:
+                    
+                    if context_idx == answer_begin_idx:
+                        adjusted_answer["begin"] = token_idx
+                    elif context_idx == answer_end_idx:
+                        adjusted_answer["end"] = token_idx
+                        
+                        return adjusted_answer
+                    
+                    c = cq.popleft()
+                    context_idx += 1
+            
+            context_idx += 1
+            token_idx += 1
+            
+            cq.appendleft(c)
+            context_idx -= 1
+            
         return adjusted_answer
     
     def __getitem__(self, idx):
