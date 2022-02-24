@@ -39,6 +39,10 @@ class NerDataset(DatasetBase):
         )
         
         self.LABEL_PAD_TOKEN = "[PAD]"
+        self.SPECIAL_LABEL_TOKENS = {
+            "pad": self.LABEL_PAD_TOKEN
+        }
+        
         vocab = [self.LABEL_PAD_TOKEN]
         for dataset in self.dataset:
             vocab += dataset["labels"]

@@ -120,7 +120,8 @@ class KoRIA:
         )
         
         # Train
-        task.train()
+        # task.train()
+        task.valid()
     
     def predict(self, task_name):
         if task_name in vars(self.cfg.tasks).keys():
