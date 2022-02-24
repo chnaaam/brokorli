@@ -1,5 +1,4 @@
 import torch
-from collections import deque
 import logging
 
 logger = logging.getLogger("koria")

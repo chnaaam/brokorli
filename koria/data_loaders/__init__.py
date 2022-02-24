@@ -1,13 +1,11 @@
 import os
 
 from .data_list import (
-    SrlData,
     NerData,
     MrcData
 )
 
 from .dataset import (
-    SrlDataset, 
     NerDataset,
     MrcDataset
 )
@@ -25,7 +23,6 @@ Example
 """
 
 DATA_LIST = {
-    "srl": SrlData,
     "ner": NerData,
     "mrc": MrcData
 }
@@ -43,7 +40,6 @@ Example
 """
 
 DATASET_LIST = {
-    "srl": SrlDataset,
     "ner": NerDataset,
     "mrc": MrcDataset
 }

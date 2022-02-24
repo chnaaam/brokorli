@@ -34,14 +34,7 @@ class DatasetBase(Dataset, metaclass=ABCMeta):
         self.max_seq_len = max_seq_len
         
         self.special_tokens = special_tokens
-        
-        if self.model_name == "bert":
-            self.special_tokenizer_sep_indicator = "▁"
-            self.special_tokenizer_replaced_sep_indicator = " "
-        else:
-            self.special_tokenizer_sep_indicator = "##"
-            self.special_tokenizer_replaced_sep_indicator = ""
-        
+                
         self.build_dataset_func = build_dataset_func
         
         self.dataset = []
@@ -63,6 +56,29 @@ class DatasetBase(Dataset, metaclass=ABCMeta):
             self.save_cache_file(cache_path, self.dataset)
         else:
             self.dataset = self.load_cache_file(cache_path)
+    
+    def build_vocab(self, vocab):
+        vocab_path = os.path.join(self.vocab_dir, f"{self.task_name}.label")
+        
+        if not os.path.isfile(vocab_path):
+            self.vocab = list(self.special_tokens.values()) + vocab
+            
+            self.l2i = {l: i for i, l in enumerate(self.vocab)}
+            self.i2l = {i: l for l, i in self.l2i.items()}
+        
+            with open(vocab_path, "wb") as fp:
+                pickle.dump({"l2i": self.l2i}, fp)
+        
+        else:
+            with open(vocab_path, "rb") as fp:
+                data = pickle.load(fp)
+
+            if "l2i" not in data.keys():
+                raise KeyError("Invalid label file. Please label file and run it again")
+
+            self.l2i = data["l2i"]
+            self.vocab = list(set(self.l2i.keys()))
+            self.i2l = {i: l for l, i in self.l2i.items()}
     
     def __len__(self):
         return len(self.dataset)
