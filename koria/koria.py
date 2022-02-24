@@ -40,7 +40,7 @@ class KoRIA:
         logger.info(f"Model type : {task_cfg.model_type}")
         logger.info(f"Tokenizer name : {task_cfg.model_name}")
         
-        tokenizer = TOKENIZER_LIST[task_cfg.model_name].from_pretrained(MODEL_NAME_LIST[task_cfg.model_name])
+        tokenizer = TOKENIZER_LIST[task_cfg.model_name].from_pretrained(MODEL_NAME_LIST[task_cfg.model_name], use_fast=True)
         
         # Add special tokens in tokenizer
         if task_name in SPECIAL_TOKEN_LIST:

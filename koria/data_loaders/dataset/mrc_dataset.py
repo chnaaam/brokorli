@@ -42,10 +42,9 @@ class MrcDataset(DatasetBase):
         try:
             context_token_list = self.tokenizer.tokenize(context)
             question_token_list = self.tokenizer.tokenize(question)
-            print(context)
-            print(context[answer["begin"]: answer["end"] + 1])
-            answer = self.adjust_answer_position(context_tokens=context_token_list, answer=answer, context=context)
-            print(context_token_list[answer["begin"]: answer["end"] + 1])
+            
+            answer = self.adjust_answer_position(context=context, answer=answer)
+            
             return {
                 "context": context_token_list,
                 "question": question_token_list,
@@ -55,10 +54,8 @@ class MrcDataset(DatasetBase):
         except IndexError:
             return None
     
-    def adjust_answer_position(self, context_tokens, answer, context):
-        # BERT
-        context_idx = 0
-        token_idx = 0
+    def adjust_answer_position(self, context, answer):
+        # TODO: Unsupported KoBERT and KoCharElectra Tokenizer
         
         answer_begin_idx = answer["begin"]
         answer_end_idx = answer["end"]
@@ -67,49 +64,25 @@ class MrcDataset(DatasetBase):
             "end": -1
         }
         
-        cq = deque(list(context))
-        ctq = deque(context_tokens)
+        offsets = self.tokenizer(context, return_offsets_mapping=True)["offset_mapping"]
         
-        # Context Character Index, Context Character
-        while cq:
-            c = cq.popleft()
-            token = ctq.popleft()
+        for offset_idx, (word_begin_idx, word_end_idx) in enumerate(offsets):
             
-            if self.model_name in ["kobert"]:
-                if token.startswith("▁"):
-                    if context_idx == 0:
-                        token = token.replace("▁", "")
-                    else:
-                        token = token.replace("▁", " ")
-            else:
-                if token.startswith("##"):
-                    token = token.replace("##", "")
-            
-            while c != token[0]:
-                c = cq.popleft()
-                context_idx += 1
-            
-            while token:
-                t = token[0]
-                token = token[1:]
+            if word_begin_idx <= answer_begin_idx <= word_end_idx and word_begin_idx <= answer_end_idx <= word_end_idx:
+                adjusted_answer["begin"] = offset_idx - 1
+                adjusted_answer["end"] = offset_idx - 1
                 
-                if t == c:
-                    
-                    if context_idx == answer_begin_idx:
-                        adjusted_answer["begin"] = token_idx
-                    elif context_idx == answer_end_idx:
-                        adjusted_answer["end"] = token_idx
-                        
-                        return adjusted_answer
-                    
-                    c = cq.popleft()
-                    context_idx += 1
+                continue
             
-            context_idx += 1
-            token_idx += 1
-            
-            cq.appendleft(c)
-            context_idx -= 1
+            if word_begin_idx <= answer_begin_idx <= word_end_idx or \
+                word_begin_idx <= answer_end_idx <= word_end_idx or \
+                answer_begin_idx <= word_begin_idx <= answer_end_idx or \
+                answer_begin_idx <= word_end_idx <= answer_end_idx:
+                
+                if adjusted_answer["begin"] == -1:
+                    adjusted_answer["begin"] = offset_idx - 1   # CLS Token - 1
+                else:
+                    adjusted_answer["end"] = offset_idx - 1
             
         return adjusted_answer
     
