@@ -34,6 +34,9 @@ class TaskBase(metaclass=ABCMeta):
         else:
             self.train_data_loader, self.valid_data_loader, self.test_data_loader = None, None, None
             
+        # Max Sequence Length
+        self.max_seq_len = parameters["max_seq_len"]
+            
         # Use gpu
         self.use_cuda = False
         if "use_cuda" in parameters:

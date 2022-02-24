@@ -13,6 +13,7 @@ from .utils import *
 from .data_loaders import load_data, DATASET_LIST
 from .tasks import TASK_LIST
 from .tokenizers import TOKENIZER_LIST, SPECIAL_TOKEN_LIST
+from .workflow import Workflow
 
 class KoRIA:
     
@@ -97,6 +98,9 @@ class KoRIA:
             # Optimizer, loss function, scheduler
             optimizer=OPTIMIZER_LIST[self.cfg.parameters.optimizer],
             
+            # Max sequence length
+            max_seq_len=task_cfg.max_seq_len,
+                
             # Use GPU or not
             use_cuda=self.cfg.use_cuda,
             
@@ -120,8 +124,7 @@ class KoRIA:
         )
         
         # Train
-        # task.train()
-        task.valid()
+        task.train()
     
     def predict(self, task_name):
         if task_name in vars(self.cfg.tasks).keys():
@@ -147,6 +150,9 @@ class KoRIA:
             # Tokenizer
             tokenizer=tokenizer,
             
+            # Max sequence length
+            max_seq_len=task_cfg.max_seq_len,
+            
             # Use GPU or not
             use_cuda=self.cfg.use_cuda,
             
@@ -158,7 +164,44 @@ class KoRIA:
             vocab_size=len(tokenizer),
         )
         
-        task.predict(sentence="홍길동의 아버지는 홍판서이다.", question="홍길동의 아버지는 누구인가?")
+        task.predict(sentence="홍길동의 아버지는 홍판서이다.", question="홍길동의 아내는 누구인가?")
         
+    def pipeline(self):
+        task_dict = {}
         
-        
+        for task_name in vars(self.cfg.tasks).keys():
+            task_cfg = vars(self.cfg.tasks)[task_name]
+            
+            tokenizer = TOKENIZER_LIST[task_cfg.model_name].from_pretrained(MODEL_NAME_LIST[task_cfg.model_name])
+            
+            # Add special tokens in tokenizer
+            if task_name in SPECIAL_TOKEN_LIST:
+                tokenizer.add_special_tokens({"additional_special_tokens": list(SPECIAL_TOKEN_LIST[task_name].values())})
+            
+            task = TASK_LIST[task_name](
+            
+                # Configuration for training
+                parameter_cfg=self.cfg.parameters,
+                
+                # Selected LM Model
+                model_name=MODEL_NAME_LIST[task_cfg.model_name],
+                model_type=task_cfg.model_type,
+                
+                # Tokenizer
+                tokenizer=tokenizer,
+                
+                # Max sequence length
+                max_seq_len=task_cfg.max_seq_len,
+                
+                # Use GPU or not
+                use_cuda=self.cfg.use_cuda,
+                
+                # The model hub is a directory where models are stored when model training is over.
+                model_hub_path=os.path.join(self.cfg.path.root, self.cfg.path.model),
+                
+                # Optional Parameters
+                # If a special token is added, the input size of the model is adjusted.
+                vocab_size=len(tokenizer),
+            )
+            
+            task_dict.setdefault(task_name, task)

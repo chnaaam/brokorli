@@ -57,7 +57,7 @@ class MRC(TaskBase):
             print(f"Epoch : {epoch}\tTrain Loss : {avg_train_loss:.4f}\tValid Loss : {avg_valid_loss:.4f}\tValid F1 Score : {avg_valid_f1_score * 100:.4f}\tEM Score : {avg_valid_em_score * 100:.4f}")
             
             if max_score < avg_valid_f1_score:
-                self.save_model(path=os.path.join(self.model_hub_path, f"mrc-e{epoch}-f1{avg_valid_f1_score * 100:.4f}-em{avg_valid_em_score * 100:.4f}-lr{self.cfg.learning_rate}-len{self.cfg.max_seq_len}.mdl"))
+                self.save_model(path=os.path.join(self.model_hub_path, f"mrc-e{epoch}-f1{avg_valid_f1_score * 100:.4f}-em{avg_valid_em_score * 100:.4f}-lr{self.cfg.learning_rate}-len{self.max_seq_len}.mdl"))
                 
     def valid(self):
         self.model.eval()
@@ -128,14 +128,13 @@ class MRC(TaskBase):
             sentence_tokens = self.tokenizer.tokenize(sentence)
             question_tokens = self.tokenizer.tokenize(question)
             
-            max_seq_len = 386#self.cfg.max_seq_len
             token_list = [self.tokenizer.cls_token] + question_tokens + [self.tokenizer.sep_token]
             len_question_token_list = len(token_list)
             
-            if len(sentence_tokens) > max_seq_len - len_question_token_list:
-                sentence_tokens = sentence_tokens[:max_seq_len - len_question_token_list]
+            if len(sentence_tokens) > self.max_seq_len - len_question_token_list:
+                sentence_tokens = sentence_tokens[:self.max_seq_len - len_question_token_list]
             else:
-                sentence_tokens = sentence_tokens + [self.tokenizer.pad_token] * (max_seq_len - len_question_token_list - len(sentence_tokens))
+                sentence_tokens = sentence_tokens + [self.tokenizer.pad_token] * (self.max_seq_len - len_question_token_list - len(sentence_tokens))
             
             token_list = token_list + sentence_tokens
             

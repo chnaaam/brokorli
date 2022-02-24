@@ -68,7 +68,7 @@ class NER(TaskBase):
             print(f"Epoch : {epoch}\tTrain Loss : {avg_train_loss:.4f}\tValid Loss : {avg_valid_loss:.4f}\tValid F1 Score : {avg_valid_f1_score * 100:.4f}")
             
             if max_score < avg_valid_f1_score:
-                self.save_model(path=os.path.join(self.model_hub_path, f"ner-e{epoch}-{avg_valid_f1_score * 100:.4f}-lr{self.cfg.learning_rate}-len{self.cfg.max_seq_len}.mdl"))
+                self.save_model(path=os.path.join(self.model_hub_path, f"ner-e{epoch}-{avg_valid_f1_score * 100:.4f}-lr{self.cfg.learning_rate}-len{self.max_seq_len}.mdl"))
                 
     def valid(self):
         self.model.eval()
