@@ -13,7 +13,6 @@ from .utils import *
 from .data_loaders import load_data, DATASET_LIST
 from .tasks import TASK_LIST
 from .tokenizers import TOKENIZER_LIST, SPECIAL_TOKEN_LIST
-from .workflow import Workflow
 
 class KoRIA:
     
@@ -31,9 +30,9 @@ class KoRIA:
     def train(self, task_name):
         logger.info(f"Task : {task_name}")
         
-        if task_name in vars(self.cfg.tasks).keys():
-            task_cfg = vars(self.cfg.tasks)[task_name]
-        else:
+        task_cfg = get_data_gene_config(cfg_path=self.cfg.path.config, cfg_fn=f"{task_name}.cfg")
+        
+        if not task_cfg:
             raise ValueError(f"The task is not defined. Define the {task_name} task.")
         
         # Load Tokenizer
@@ -69,7 +68,7 @@ class KoRIA:
                 cache_dir=os.path.join(self.cfg.path.root, self.cfg.path.cache),
                 vocab_dir=os.path.join(self.cfg.path.root, self.cfg.path.vocab),
                 dataset_type=dataset_type,
-                max_seq_len=self.cfg.parameters.max_seq_len))
+                max_seq_len=task_cfg.parameters.max_seq_len))
         
         train_dataset, valid_dataset, test_dataset = dataset_list
         
@@ -78,8 +77,8 @@ class KoRIA:
         
         task = TASK_LIST[task_name](
             
-            # Configuration for training
-            parameter_cfg=self.cfg.parameters,
+            # Configuration for selected task
+            cfg=task_cfg,
             
             # Selected LM Model
             model_name=MODEL_NAME_LIST[task_cfg.model_name],
@@ -98,11 +97,11 @@ class KoRIA:
             # Optimizer, loss function, scheduler
             optimizer=OPTIMIZER_LIST[self.cfg.parameters.optimizer],
             
-            # Max sequence length
-            max_seq_len=task_cfg.max_seq_len,
-                
             # Use GPU or not
             use_cuda=self.cfg.use_cuda,
+            
+            # Use fp16 training
+            use_fp16=self.cfg.use_fp16,
             
             # The model hub is a directory where models are stored when model training is over.
             model_hub_path=os.path.join(self.cfg.path.root, self.cfg.path.model),
@@ -127,9 +126,9 @@ class KoRIA:
         task.train()
     
     def predict(self, task_name):
-        if task_name in vars(self.cfg.tasks).keys():
-            task_cfg = vars(self.cfg.tasks)[task_name]
-        else:
+        task_cfg = get_data_gene_config(cfg_path=self.cfg.path.config, cfg_fn=f"{task_name}.cfg")
+        
+        if not task_cfg:
             raise ValueError(f"The task is not defined. Define the {task_name} task.")
         
         tokenizer = TOKENIZER_LIST[task_cfg.model_name].from_pretrained(MODEL_NAME_LIST[task_cfg.model_name])
@@ -141,7 +140,7 @@ class KoRIA:
         task = TASK_LIST[task_name](
             
             # Configuration for training
-            parameter_cfg=self.cfg.parameters,
+            cfg=task_cfg,
             
             # Selected LM Model
             model_name=MODEL_NAME_LIST[task_cfg.model_name],
@@ -149,9 +148,6 @@ class KoRIA:
             
             # Tokenizer
             tokenizer=tokenizer,
-            
-            # Max sequence length
-            max_seq_len=task_cfg.max_seq_len,
             
             # Use GPU or not
             use_cuda=self.cfg.use_cuda,

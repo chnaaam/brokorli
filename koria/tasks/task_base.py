@@ -18,7 +18,7 @@ class TaskBase(metaclass=ABCMeta):
         """
         
         # Model parameter
-        self.cfg = parameters["parameter_cfg"]
+        self.cfg = parameters["cfg"]
         
         # Data loader
         
@@ -35,21 +35,26 @@ class TaskBase(metaclass=ABCMeta):
             self.train_data_loader, self.valid_data_loader, self.test_data_loader = None, None, None
             
         # Max Sequence Length
-        self.max_seq_len = parameters["max_seq_len"]
+        self.max_seq_len = self.cfg.parameters.max_seq_len
             
         # Use gpu
         self.use_cuda = False
         if "use_cuda" in parameters:
             self.use_cuda = parameters["use_cuda"]
-                    
-        # Hub Path for Trained Model
-        self.model_hub_path = parameters["model_hub_path"]
         
+        # Use fp16
+        self.use_fp16 = False
+        if "use_fp16" in parameters:
+            self.use_fp16 = parameters["use_fp16"]
+                  
         # Huggingface Accelerator
         self.accelerator = Accelerator(
-            fp16=self.cfg.fp16, 
+            fp16=self.use_fp16, 
             cpu=False if self.use_cuda else True
         )
+        
+        # Hub Path for Trained Model
+        self.model_hub_path = parameters["model_hub_path"]
         
         # LM Model
         self.model = MODEL_LIST[parameters["model_type"]](
