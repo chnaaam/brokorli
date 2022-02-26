@@ -2,11 +2,11 @@ import os
 import torch
 from tqdm import tqdm
 
-from .task_base import TaskBase
+from .neural_based_task import NeuralBaseTask
 
 from koria.metrics import calculate_qa_f1_score, calculate_em_score
 
-class MRC(TaskBase):
+class MRC(NeuralBaseTask):
 
     def __init__(self, **parameters):
                 

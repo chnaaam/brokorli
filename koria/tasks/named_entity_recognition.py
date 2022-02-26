@@ -2,11 +2,11 @@ import os
 import torch
 from tqdm import tqdm
 
-from .task_base import TaskBase
+from .neural_based_task import NeuralBaseTask
 
 from koria.metrics.f1_score import calculate_sl_f1_score
 
-class NER(TaskBase):
+class NER(NeuralBaseTask):
 
     def __init__(self, **parameters):
         self.vocab_size = parameters["vocab_size"]

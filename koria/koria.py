@@ -28,6 +28,10 @@ class KoRIA:
             make_dir(os.path.join(self.cfg.path.root, path))
             
     def train(self, task_name):
+        
+        if task_name in ["qg"]:
+            raise ValueError("{task_name} task is not supported for training")
+        
         logger.info(f"Task : {task_name}")
         
         task_cfg = get_data_gene_config(cfg_path=self.cfg.path.config, cfg_fn=f"{task_name}.cfg")
@@ -131,36 +135,49 @@ class KoRIA:
         if not task_cfg:
             raise ValueError(f"The task is not defined. Define the {task_name} task.")
         
-        tokenizer = TOKENIZER_LIST[task_cfg.model_name].from_pretrained(MODEL_NAME_LIST[task_cfg.model_name])
-        
-        # Add special tokens in tokenizer
-        if task_name in SPECIAL_TOKEN_LIST:
-            tokenizer.add_special_tokens({"additional_special_tokens": list(SPECIAL_TOKEN_LIST[task_name].values())})
+        if task_name not in ["qg"]:
+            tokenizer = TOKENIZER_LIST[task_cfg.model_name].from_pretrained(MODEL_NAME_LIST[task_cfg.model_name])
             
-        task = TASK_LIST[task_name](
+            # Add special tokens in tokenizer
+            if task_name in SPECIAL_TOKEN_LIST:
+                tokenizer.add_special_tokens({"additional_special_tokens": list(SPECIAL_TOKEN_LIST[task_name].values())})
+                
+            task = TASK_LIST[task_name](
+                
+                # Configuration for training
+                cfg=task_cfg,
+                
+                # Selected LM Model
+                model_name=MODEL_NAME_LIST[task_cfg.model_name],
+                model_type=task_cfg.model_type,
+                
+                # Tokenizer
+                tokenizer=tokenizer,
+                
+                # Use GPU or not
+                use_cuda=self.cfg.use_cuda,
+                
+                # The model hub is a directory where models are stored when model training is over.
+                model_hub_path=os.path.join(self.cfg.path.root, self.cfg.path.model),
+                
+                # Optional Parameters
+                # If a special token is added, the input size of the model is adjusted.
+                vocab_size=len(tokenizer),
+            )
             
-            # Configuration for training
-            cfg=task_cfg,
+            task.predict(sentence="홍길동의 아버지는 홍판서이다.", question="홍길동의 아내는 누구인가?")
             
-            # Selected LM Model
-            model_name=MODEL_NAME_LIST[task_cfg.model_name],
-            model_type=task_cfg.model_type,
+        else:
+            task = TASK_LIST[task_name](
+                
+                # Configuration
+                cfg=task_cfg,
+                
+                # rule root directory
+                rule_dir=self.cfg.path.rules
+            )
             
-            # Tokenizer
-            tokenizer=tokenizer,
-            
-            # Use GPU or not
-            use_cuda=self.cfg.use_cuda,
-            
-            # The model hub is a directory where models are stored when model training is over.
-            model_hub_path=os.path.join(self.cfg.path.root, self.cfg.path.model),
-            
-            # Optional Parameters
-            # If a special token is added, the input size of the model is adjusted.
-            vocab_size=len(tokenizer),
-        )
-        
-        task.predict(sentence="홍길동의 아버지는 홍판서이다.", question="홍길동의 아내는 누구인가?")
+            task.predict(entity="홍길동", type="ps")
         
     def pipeline(self):
         task_dict = {}

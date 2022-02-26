@@ -37,7 +37,7 @@ if __name__ == "__main__":
     parser.add_argument("--type", choices=["train", "predict"])
     
     # Train specific task
-    parser.add_argument("--task_name", type=str, default="srl", choices=["srl", "ner", "mrc"])
+    parser.add_argument("--task_name", type=str, default="qg", choices=["srl", "ner", "mrc", "qg"])
     
     args = parser.parse_args()
     

@@ -1,21 +1,34 @@
-from .task_base import TaskBase
+from .rule_based_task import RuleBasedTask
 
 
-class QG(TaskBase):
+class QG(RuleBasedTask):
 
     def __init__(self, **parameters):
-                
-        # Set common parameters for TaskBase and build model
-        super().__init__(model_parameters=None, **parameters)
+        super().__init__(**parameters)
         
-    def train(self):
-        raise NotImplementedError("Question generation task does not use train function in the current version.")
-    
-    def valid(self):
-        raise NotImplementedError("Question generation task does not use valid function in the current version.")
-    
-    def test(self):
-        raise NotImplementedError("Question generation task does not use test function in the current version.")
-    
-    def predict(self):
-        pass
+        self.ENTITY_TOKEN = "{E}"
+   
+    def predict(self, **parameters):
+        
+        if "entity" not in parameters.keys() or "type" not in parameters.keys():
+            raise KeyError("The question generation task must need entity name and type parameters")
+        
+        entity = parameters["entity"]
+        type = parameters["type"].lower()
+        
+        if type not in self.rules.keys():
+            raise KeyError(f"{type} is not defined in rule files")
+        
+        templates = self.rules[type]
+        questions = dict()
+        
+        for relation, template_list in templates.items():
+            questions.setdefault(relation, [])
+            
+            for template in template_list:
+                questions[relation].append(template.replace(self.ENTITY_TOKEN, entity))
+                
+        print(questions)
+        return questions
+        
+        

@@ -7,10 +7,10 @@ from transformers import get_linear_schedule_with_warmup
 from koria.models import MODEL_LIST
 
 
-class TaskBase(metaclass=ABCMeta):
+class NeuralBaseTask(metaclass=ABCMeta):
     """
-    Task에 대한 추상 클래스 입니다. 
-    만약, 새로운 Task를 정의하는 경우, 해당 클래스를 상속 받아 사용하면 됩니다.
+    Deep Learning을 기반으로 하는 Task에 대한 추상 클래스 입니다. 
+    만약, 새로운 Deep Learning 기반 Task를 정의하는 경우, 해당 클래스를 상속 받아 사용하면 됩니다.
     """
     def __init__(self, model_parameters, **parameters):
         """
@@ -21,7 +21,6 @@ class TaskBase(metaclass=ABCMeta):
         self.cfg = parameters["cfg"]
         
         # Data loader
-        
         if "data_loader" in parameters:
             if "train" in parameters["data_loader"]:
                 self.train_data_loader = parameters["data_loader"]["train"]
@@ -114,7 +113,7 @@ class TaskBase(metaclass=ABCMeta):
         pass
             
     @abstractmethod
-    def predict(self):
+    def predict(self, **parameters):
         """
         train 함수는 모델 학습을 위해 사용됩니다.
         TaskBase 클래스를 상속한 경우, 해당 추상 함수를 반드시 정의해주세요.
