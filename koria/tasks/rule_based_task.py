@@ -3,7 +3,6 @@ import yaml
 
 from abc import *
 
-
 class RuleBasedTask(metaclass=ABCMeta):
     """
     규칙 기반의 Task에 대한 추상 클래스 입니다. 
@@ -28,12 +27,6 @@ class RuleBasedTask(metaclass=ABCMeta):
                 
             if rule:
                 self.rules.setdefault(rule_fn.split(".")[0], rule)
-    
-    def convert_josa():
-        # 1. 맨 뒷 글자가 영어인지 아닌지 판별
-        
-        # 2. 이 / 가, 은 / 는 구별
-        pass
     
     @abstractmethod
     def predict(self, **parameters):

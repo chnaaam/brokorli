@@ -177,7 +177,7 @@ class KoRIA:
                 rule_dir=self.cfg.path.rules
             )
             
-            task.predict(entity="홍길동", type="ps")
+            print(task.predict(entity="조세호", type="ps"))
         
     def pipeline(self):
         task_dict = {}

@@ -1,3 +1,5 @@
+from pyjosa.josa import Josa
+
 from .rule_based_task import RuleBasedTask
 
 
@@ -26,9 +28,30 @@ class QG(RuleBasedTask):
             questions.setdefault(relation, [])
             
             for template in template_list:
-                questions[relation].append(template.replace(self.ENTITY_TOKEN, entity))
-                
-        print(questions)
-        return questions
+                questions[relation].append(self.reconstruct_question(template, entity))
         
+        return questions
+    
+    def reconstruct_question(self, template, entity,):
+        
+        candidate_josa = template.split("_")[1]
+        
+        # 1. 맨 뒷 글자가 한글인지 아닌지 판별
+        if self.is_hangul(entity[-1]):
+            # 2. 이 / 가, 은 / 는 구별
+            josa = Josa.get_josa(entity, candidate_josa.split("/")[0])
+        else:
+            # 2. 영어인 경우 앞에것을 임의로 선택
+            josa = candidate_josa[0]
+            
+        template = template.replace(f"_{candidate_josa}_", josa)
+        template = template.replace(self.ENTITY_TOKEN, entity)
+        
+        return template
+           
+    def is_hangul(self, c):
+        if ord('가') <= ord(c) <= ord('힣'):
+            return True
+        
+        return False
         
