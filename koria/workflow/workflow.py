@@ -1,5 +1,5 @@
 from . import (
-    CommonPath,
+    EntityRecognitionPath,
     ZeroShotPath
 )
 
@@ -7,10 +7,16 @@ class Workflow:
     def __init__(self, tasks):
         self.tasks = tasks
         
-        self.common_path = CommonPath(tasks)
+        self.entity_recognition_path = EntityRecognitionPath(tasks)
         self.zero_shot_path = ZeroShotPath(tasks)
         
-    def run(self, **parameters):
-        pass
+    def cli(self):
+        while True:
+            sentence = input(">>> ")
+            entities = self.entity_recognition_path.run(sentence=sentence)
+            
+            triples = self.zero_shot_path.run(sentence=sentence, entities=entities)
+        
+        
     
     

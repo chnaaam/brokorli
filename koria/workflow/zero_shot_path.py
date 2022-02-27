@@ -1,5 +1,6 @@
-from . import PathBase
+from collections import Counter
 
+from . import PathBase
 
 class ZeroShotPath(PathBase):
     
@@ -17,4 +18,33 @@ class ZeroShotPath(PathBase):
         self.mrc_task = tasks["mrc"]
         
     def run(self, **parameters):
-        pass
+        if "sentence" not in parameters.keys() or "entities" not in parameters.keys():
+            raise KeyError("The zero-shot path must need sentence and entities parameter")
+        
+        sentence = parameters["sentence"]
+        entities = parameters["entities"]
+        
+        for subj_idx, subj_info in enumerate(entities):
+            subj = subj_info["entity"]
+            subj_type = subj_info["label"]
+            
+            if not self.qg_task.is_registered_entity_type(subj_type):
+                continue
+            
+            questions = self.qg_task.predict(entity=subj, type=subj_type)
+            
+            for relation, question_info in questions.items():
+                counted_answer = Counter([self.mrc_task.predict(sentence=sentence, question=question) for question in question_info["questions"]])
+                answer = counted_answer.most_common(1)[0][0]
+                
+                for obj_idx, obj_info in enumerate(entities):
+                    if subj_idx == obj_idx:
+                        continue
+                    
+                    obj = obj_info["entity"]
+                    obj_type = obj_info["label"].lower()
+            
+                    if answer == obj and obj_type in question_info["obj_types"]:
+                        print(f"Triple(S-R-O): {subj} {relation} {obj}")
+                        
+            

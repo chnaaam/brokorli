@@ -120,7 +120,13 @@ class NER(NeuralBaseTask):
     def test(self):
         pass
     
-    def predict(self, sentence):
+    def predict(self, **parameters):
+        
+        if "sentence" not in parameters.keys():
+            raise KeyError("The named entity recognition task must need sentence parameter")
+        
+        sentence = parameters["sentence"]
+        
         self.load_model(path=os.path.join(self.model_hub_path, "ner.mdl"))
         self.model.eval()
         
@@ -155,8 +161,7 @@ class NER(NeuralBaseTask):
             
             label_list = [self.i2l[tag] for tag in torch.argmax(outputs[0], dim=-1).tolist()[0][1:-1]]
             entities = self.label2entity(token_list=token_list[1:], label_list=label_list)
-            print(entities)
-            
+                        
             return entities
         
     def decode(self, labels, pred_tags):

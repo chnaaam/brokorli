@@ -120,7 +120,14 @@ class MRC(NeuralBaseTask):
     def test(self):
         pass
     
-    def predict(self, sentence, question):
+    def predict(self, **parameters):
+        
+        if "sentence" not in parameters.keys() or "question" not in parameters.keys():
+            raise KeyError("The machine reading comprehension task must need sentence and question parameters")
+        
+        sentence = parameters["sentence"]
+        question = parameters["question"]
+        
         self.load_model(path=os.path.join(self.model_hub_path, "mrc.mdl"))
         self.model.eval()
         
@@ -166,7 +173,6 @@ class MRC(NeuralBaseTask):
             
             answer = self.tokenizer.convert_tokens_to_string(token_list[pred_begin_indexes: pred_end_indexes + 1])
             
-            print(answer)
             return answer
         
     def decode(self, token_tensor, true_begin_indexes, true_end_indexes, pred_begin_indexes, pred_end_indexes):

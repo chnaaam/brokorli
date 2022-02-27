@@ -199,25 +199,36 @@ class KoRIA:
                 rule_dir=self.cfg.path.rules
             )
             
-            print(task.predict(entity="조세호", type="ps"))
+            task.predict(entity="조세호", type="ps")
         
-    def pipeline(self):
+    def cli(self):
         tasks = {}
         
-        for task_name in vars(self.cfg.tasks).keys():
-            task_cfg = vars(self.cfg.tasks)[task_name]
+        for task_name in TASK_LIST.keys():
+            task_cfg = get_data_gene_config(cfg_path=self.cfg.path.config, cfg_fn=f"{task_name}.cfg")
             
             if task_name not in ["qg"]:
                 tokenizer = TOKENIZER_LIST[task_cfg.model_name].from_pretrained(MODEL_NAME_LIST[task_cfg.model_name])
-                
+            
                 # Add special tokens in tokenizer
                 if task_name in SPECIAL_TOKEN_LIST:
                     tokenizer.add_special_tokens({"additional_special_tokens": list(SPECIAL_TOKEN_LIST[task_name].values())})
                 
+                l2i, i2l = None, None
+                if task_name in ["ner"]:
+                    with open(os.path.join(self.cfg.path.root, self.cfg.path.vocab, f"{task_name}.label"), "rb") as fp:
+                        data = pickle.load(fp)
+
+                    if "l2i" not in data.keys():
+                        raise KeyError("Invalid label file. Please check label file and run it again")
+
+                    l2i = data["l2i"]
+                    i2l = {i: l for l, i in l2i.items()}
+            
                 task = TASK_LIST[task_name](
-                
+                    
                     # Configuration for training
-                    parameter_cfg=self.cfg.parameters,
+                    cfg=task_cfg,
                     
                     # Selected LM Model
                     model_name=MODEL_NAME_LIST[task_cfg.model_name],
@@ -225,9 +236,6 @@ class KoRIA:
                     
                     # Tokenizer
                     tokenizer=tokenizer,
-                    
-                    # Max sequence length
-                    max_seq_len=task_cfg.max_seq_len,
                     
                     # Use GPU or not
                     use_cuda=self.cfg.use_cuda,
@@ -238,6 +246,14 @@ class KoRIA:
                     # Optional Parameters
                     # If a special token is added, the input size of the model is adjusted.
                     vocab_size=len(tokenizer),
+                    
+                    # Label Size
+                    label_size=len(l2i) if l2i else None,
+                    
+                    # Token index in tokenizer and label-index pair
+                    token_pad_id=tokenizer.pad_token_id,
+                    l2i=l2i if l2i else None,
+                    i2l=i2l if i2l else None,
                 )
             else:
                 task = TASK_LIST[task_name](
@@ -251,4 +267,5 @@ class KoRIA:
             tasks.setdefault(task_name, task)
             
         workflow = Workflow(tasks=tasks)
+        workflow.cli()
         

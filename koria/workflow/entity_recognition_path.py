@@ -1,7 +1,7 @@
 from . import PathBase
 
 
-class CommonPath(PathBase):
+class EntityRecognitionPath(PathBase):
     
     """
     Common Workflow
@@ -13,5 +13,5 @@ class CommonPath(PathBase):
     def __init__(self, tasks):
         self.ner_task = tasks["ner"]
         
-    def run(self, **parameters):
-        pass
+    def run(self, sentence):
+        return self.ner_task.predict(sentence=sentence)
