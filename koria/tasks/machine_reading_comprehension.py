@@ -132,23 +132,31 @@ class MRC(NeuralBaseTask):
         self.model.eval()
         
         with torch.no_grad():
-            sentence_tokens = self.tokenizer.tokenize(sentence)
-            question_tokens = self.tokenizer.tokenize(question)
-            
-            token_list = [self.tokenizer.cls_token] + question_tokens + [self.tokenizer.sep_token]
-            len_question_token_list = len(token_list)
-            
-            if len(sentence_tokens) > self.max_seq_len - len_question_token_list:
-                sentence_tokens = sentence_tokens[:self.max_seq_len - len_question_token_list]
-            else:
-                sentence_tokens = sentence_tokens + [self.tokenizer.pad_token] * (self.max_seq_len - len_question_token_list - len(sentence_tokens))
-            
-            token_list = token_list + sentence_tokens
-            
-            token_ids = self.tokenizer.convert_tokens_to_ids(token_list)
-            token_type_ids = [0] * len([self.tokenizer.cls_token] + question_tokens + [self.tokenizer.sep_token]) + [1] * len(sentence_tokens)
-            
-            token_tensor, token_type_ids_tensor = torch.tensor([token_ids]), torch.tensor([token_type_ids])
+            if type(question) == str:
+                question = [question]
+                
+            token_ids_list, token_type_ids_list = [], []
+            for sent, quest in [(sentence, quest) for quest in question]:
+                sentence_tokens = self.tokenizer.tokenize(sent)
+                question_tokens = self.tokenizer.tokenize(quest)
+                
+                token_list = [self.tokenizer.cls_token] + question_tokens + [self.tokenizer.sep_token]
+                len_question_token_list = len(token_list)
+                
+                if len(sentence_tokens) > self.max_seq_len - len_question_token_list:
+                    sentence_tokens = sentence_tokens[:self.max_seq_len - len_question_token_list]
+                else:
+                    sentence_tokens = sentence_tokens + [self.tokenizer.pad_token] * (self.max_seq_len - len_question_token_list - len(sentence_tokens))
+                
+                token_list = token_list + sentence_tokens
+                
+                token_ids = self.tokenizer.convert_tokens_to_ids(token_list)
+                token_type_ids = [0] * len([self.tokenizer.cls_token] + question_tokens + [self.tokenizer.sep_token]) + [1] * len(sentence_tokens)
+                
+                token_ids_list.append(token_ids)
+                token_type_ids_list.append(token_type_ids)
+                
+            token_tensor, token_type_ids_tensor = torch.tensor(token_ids_list), torch.tensor(token_type_ids_list)
             attention_mask = (token_tensor != self.tokenizer.pad_token_id).float()
             
             self.model.to(self.device)
@@ -165,15 +173,14 @@ class MRC(NeuralBaseTask):
                 end_positions=None,
             )
             
-            start_logits = outputs["start_logits"]
-            end_logits = outputs["end_logits"]
+            pred_begin_indexes = torch.argmax(outputs["start_logits"], dim=-1)
+            pred_end_indexes = torch.argmax(outputs["end_logits"], dim=-1)
+                
+            answers = []
+            for pred_begin_index, pred_end_index in zip(pred_begin_indexes, pred_end_indexes):
+                answers.append(self.tokenizer.convert_tokens_to_string(token_list[pred_begin_index: pred_end_index + 1]))
             
-            pred_begin_indexes = torch.argmax(start_logits, dim=-1)
-            pred_end_indexes = torch.argmax(end_logits, dim=-1)
-            
-            answer = self.tokenizer.convert_tokens_to_string(token_list[pred_begin_indexes: pred_end_indexes + 1])
-            
-            return answer
+            return answers
         
     def decode(self, token_tensor, true_begin_indexes, true_end_indexes, pred_begin_indexes, pred_end_indexes):
         true_answers, pred_answers = [], []

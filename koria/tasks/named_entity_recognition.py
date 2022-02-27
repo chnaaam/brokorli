@@ -131,19 +131,30 @@ class NER(NeuralBaseTask):
         self.model.eval()
         
         with torch.no_grad():
-            sentence_tokens = self.tokenizer.tokenize(sentence)
             
-            token_list = [self.tokenizer.cls_token] + sentence_tokens + [self.tokenizer.sep_token]
-            
-            if len(token_list) > self.max_seq_len:
-                token_list = token_list[:self.max_seq_len]
-            else:
-                token_list = token_list# + [self.tokenizer.pad_token] * (self.max_seq_len - len(token_list))
-            
-            token_ids = self.tokenizer.convert_tokens_to_ids(token_list)
-            token_type_ids = [1] * len(token_list)
-            
-            token_tensor, token_type_ids_tensor = torch.tensor([token_ids]), torch.tensor([token_type_ids])
+            if type(sentence) == str:
+                sentence = [sentence]
+                
+            sent_len_list, token_ids_list, token_type_ids_list = [], [], []
+            for sent in sentence:
+                sentence_tokens = self.tokenizer.tokenize(sent)
+                sent_len_list.append(len(sentence_tokens))
+                
+                token_list = [self.tokenizer.cls_token] + sentence_tokens + [self.tokenizer.sep_token]
+                
+                if len(token_list) > self.max_seq_len:
+                    token_list = token_list[:self.max_seq_len]
+                else:
+                    token_list = token_list + [self.tokenizer.pad_token] * (self.max_seq_len - len(sentence_tokens))
+                
+                token_ids = self.tokenizer.convert_tokens_to_ids(token_list)
+                token_type_ids = [1] * len(token_list)
+                
+                token_ids_list.append(token_ids)
+                token_type_ids_list.append(token_type_ids)
+                
+            token_tensor, token_type_ids_tensor = torch.tensor(token_ids_list), torch.tensor(token_type_ids_list)
+                
             attention_mask = (token_tensor != self.tokenizer.pad_token_id).float()
             
             self.model.to(self.device)
@@ -159,10 +170,12 @@ class NER(NeuralBaseTask):
                 labels=None,
             )
             
-            label_list = [self.i2l[tag] for tag in torch.argmax(outputs[0], dim=-1).tolist()[0][1:-1]]
-            entities = self.label2entity(token_list=token_list[1:], label_list=label_list)
+            entities_list = []
+            for idx, output in enumerate(outputs["logits"]):
+                label_list = [self.i2l[tag] for tag in torch.argmax(output, dim=-1).tolist()[1:sent_len_list[idx]]]
+                entities_list.append(self.label2entity(token_list=token_list[1:], label_list=label_list))
                         
-            return entities
+            return entities_list
         
     def decode(self, labels, pred_tags):
         true_y = []
@@ -192,6 +205,9 @@ class NER(NeuralBaseTask):
         entities = []
         entity_buffer = []
         for idx, label in enumerate(label_list):
+            if label == self.special_label_tokens["pad"]:
+                break
+            
             if label == "O":
                 continue
             

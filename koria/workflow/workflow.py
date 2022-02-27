@@ -15,8 +15,8 @@ class Workflow:
             sentence = input(">>> ")
             entities = self.entity_recognition_path.run(sentence=sentence)
             
-            triples = self.zero_shot_path.run(sentence=sentence, entities=entities)
+            triples = self.zero_shot_path.run(sentence=sentence, entities=entities[0])
         
-        
+            print(triples)    
     
     
