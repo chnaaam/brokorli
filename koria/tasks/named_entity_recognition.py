@@ -37,7 +37,7 @@ class NER(NeuralBaseTask):
         
         max_score = 0
         
-        for epoch in range(int(self.cfg.epochs)):
+        for epoch in range(int(self.cfg.parameters.epochs)):
             self.model.train()
             train_losses = []
             avg_train_loss = 0
@@ -57,7 +57,7 @@ class NER(NeuralBaseTask):
                 outputs = self.model(
                     token_tensor, 
                     token_type_ids=token_type_ids_tensor,
-                    attention_mask=(token_tensor != self.token_pad_id).float(),
+                    attention_mask=(token_tensor != self.tokenizer.pad_token_id).float(),
                     labels=label_tensor,
                 )
                 
@@ -96,7 +96,7 @@ class NER(NeuralBaseTask):
                 outputs = self.model(
                     token_tensor, 
                     token_type_ids=token_type_ids_tensor,
-                    attention_mask=(token_tensor != self.token_pad_id).float(),
+                    attention_mask=(token_tensor != self.tokenizer.pad_token_id).float(),
                     labels=label_tensor,
                 )
                 

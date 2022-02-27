@@ -36,7 +36,7 @@ if __name__ == "__main__":
     
     parser.add_argument("--type", choices=["train", "predict", "cli"])
     
-    parser.add_argument("--task_name", type=str, default="qg", choices=["srl", "ner", "mrc", "qg"])
+    parser.add_argument("--task_name", type=str, default="qg", choices=["srl", "ner", "mrc", "sm", "qg"])
     parser.add_argument("--topk", type=int, default=1)
     
     args = parser.parse_args()

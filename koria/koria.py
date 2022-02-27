@@ -95,13 +95,13 @@ class KoRIA:
             
             # Train, valid, test data Loader
             data_loader={
-                "train": data.DataLoader(train_dataset, batch_size=self.cfg.parameters.batch_size, shuffle=True, pin_memory=True, num_workers=self.cfg.parameters.num_workers),
-                "valid": data.DataLoader(valid_dataset, batch_size=self.cfg.parameters.batch_size, shuffle=True, pin_memory=True, num_workers=self.cfg.parameters.num_workers),
-                "test": data.DataLoader(test_dataset, batch_size=self.cfg.parameters.batch_size, shuffle=True, pin_memory=True, num_workers=self.cfg.parameters.num_workers),
+                "train": data.DataLoader(train_dataset, batch_size=task_cfg.parameters.batch_size, shuffle=True, pin_memory=True, num_workers=task_cfg.parameters.num_workers),
+                "valid": data.DataLoader(valid_dataset, batch_size=task_cfg.parameters.batch_size, shuffle=True, pin_memory=True, num_workers=task_cfg.parameters.num_workers),
+                "test": data.DataLoader(test_dataset, batch_size=task_cfg.parameters.batch_size, shuffle=True, pin_memory=True, num_workers=task_cfg.parameters.num_workers),
             },
             
             # Optimizer, loss function, scheduler
-            optimizer=OPTIMIZER_LIST[self.cfg.parameters.optimizer],
+            optimizer=OPTIMIZER_LIST[task_cfg.parameters.optimizer],
             
             # Use GPU or not
             use_cuda=self.cfg.use_cuda,
@@ -120,7 +120,6 @@ class KoRIA:
             label_size=len(train_dataset.l2i) if "l2i" in vars(train_dataset).keys() else None,
             
             # Token index in tokenizer and label-index pair
-            token_pad_id=tokenizer.pad_token_id,
             l2i=train_dataset.l2i if "l2i" in vars(train_dataset).keys() else None,
             i2l=train_dataset.i2l if "i2l" in vars(train_dataset).keys() else None,
             
@@ -129,7 +128,8 @@ class KoRIA:
         )
         
         # Train
-        task.train()
+        # task.train()
+        task.valid()
     
     def predict(self, task_name):
         task_cfg = get_data_gene_config(cfg_path=self.cfg.path.config, cfg_fn=f"{task_name}.cfg")

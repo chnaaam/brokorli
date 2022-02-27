@@ -13,6 +13,7 @@ class Workflow:
     def cli(self):
         while True:
             sentence = input(">>> ")
+            
             entities = self.entity_recognition_path.run(sentence=sentence)
             
             triples = self.zero_shot_path.run(sentence=sentence, entities=entities[0])

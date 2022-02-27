@@ -67,7 +67,7 @@ class NeuralBaseTask(metaclass=ABCMeta):
         if "optimizer" in parameters:
             self.optimizer = parameters["optimizer"](
                 self.model.parameters(),
-                lr=float(self.cfg.learning_rate)
+                lr=float(self.cfg.parameters.learning_rate)
             )
         else:
             self.optimizer = None

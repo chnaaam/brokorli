@@ -1,6 +1,7 @@
 from .named_entity_recognition import NER
 from .machine_reading_comprehension import MRC
 from .question_generation import QG
+from .semantic_matching_classification import SM
 
 """
 TASK_LIST는 정의한 Task 클래스 들을 갖고 있습니다.
@@ -15,5 +16,6 @@ Example
 TASK_LIST = {
     "ner": NER,
     "mrc": MRC,
-    "qg": QG
+    "qg": QG,
+    "sm": SM
 }

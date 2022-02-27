@@ -3,6 +3,8 @@ import collections
 from seqeval.metrics import f1_score
 from seqeval.scheme import IOBES
 
+from sklearn.metrics import accuracy_score, f1_score
+
 # F1 score for sequence labeling
 def calculate_sl_f1_score(true_y, pred_y):
     """
@@ -33,3 +35,6 @@ def calculate_qa_f1_score(true_answers, pred_answers):
     
     return sum(f1_score_list) / len(f1_score_list)
     
+# F1 score for sequence classification
+def calculate_sc_score(true_y, pred_y):
+    return {"accuracy": accuracy_score(pred_y, true_y), "f1": f1_score(pred_y, true_y)}

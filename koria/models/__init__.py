@@ -1,5 +1,6 @@
 from .sequence_labeling_model import SequenceLabelingModel
 from .question_answering_model import QuestionAnsweringModel
+from .sequence_classification_model import SequenceClassificationModel
 
 """
 MODEL_LIST는 특정 Task를 위한 모델 클래스를 갖고 있습니다.
@@ -14,4 +15,5 @@ Example
 MODEL_LIST = {
     "sequence-labeling": SequenceLabelingModel,
     "question-answering": QuestionAnsweringModel,
+    "sequence-classification": SequenceClassificationModel
 }

@@ -1,2 +1,2 @@
-from .f1_score import calculate_sl_f1_score, calculate_qa_f1_score
+from .f1_score import calculate_sl_f1_score, calculate_qa_f1_score, calculate_sc_score
 from .exact_match_score import calculate_em_score

@@ -2,12 +2,14 @@ import os
 
 from .data_list import (
     NerData,
-    MrcData
+    MrcData,
+    SmData
 )
 
 from .dataset import (
     NerDataset,
-    MrcDataset
+    MrcDataset,
+    SmDataset
 )
 
 """
@@ -24,7 +26,8 @@ Example
 
 DATA_LIST = {
     "ner": NerData,
-    "mrc": MrcData
+    "mrc": MrcData,
+    "sm": SmData
 }
 
 """
@@ -41,7 +44,8 @@ Example
 
 DATASET_LIST = {
     "ner": NerDataset,
-    "mrc": MrcDataset
+    "mrc": MrcDataset,
+    "sm": SmDataset
 }
 
 def load_data(task_cfg, task_name, model_name, cache_dir):
