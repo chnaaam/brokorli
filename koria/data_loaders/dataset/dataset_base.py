@@ -74,7 +74,7 @@ class DatasetBase(Dataset, metaclass=ABCMeta):
                 data = pickle.load(fp)
 
             if "l2i" not in data.keys():
-                raise KeyError("Invalid label file. Please label file and run it again")
+                raise KeyError("Invalid label file. Please check label file and run it again")
 
             self.l2i = data["l2i"]
             self.vocab = list(set(self.l2i.keys()))

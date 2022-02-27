@@ -1,4 +1,5 @@
 import os
+from re import L
 import torch
 from tqdm import tqdm
 
@@ -15,7 +16,13 @@ class NER(NeuralBaseTask):
         self.token_pad_id = parameters["token_pad_id"]
         self.l2i = parameters["l2i"]
         self.i2l = parameters["i2l"]
-        self.special_label_tokens = parameters["special_label_tokens"]
+        
+        if "special_label_tokens" in parameters:
+            self.special_label_tokens = parameters["special_label_tokens"]
+        else:
+            self.special_label_tokens = {
+                "pad": "[PAD]"
+            }
         
         # Set optional parameter for SRL Task
         MODEL_INIT_PARAMETERS = {
@@ -113,8 +120,44 @@ class NER(NeuralBaseTask):
     def test(self):
         pass
     
-    def predict(self):
-        pass
+    def predict(self, sentence):
+        self.load_model(path=os.path.join(self.model_hub_path, "ner.mdl"))
+        self.model.eval()
+        
+        with torch.no_grad():
+            sentence_tokens = self.tokenizer.tokenize(sentence)
+            
+            token_list = [self.tokenizer.cls_token] + sentence_tokens + [self.tokenizer.sep_token]
+            
+            if len(token_list) > self.max_seq_len:
+                token_list = token_list[:self.max_seq_len]
+            else:
+                token_list = token_list# + [self.tokenizer.pad_token] * (self.max_seq_len - len(token_list))
+            
+            token_ids = self.tokenizer.convert_tokens_to_ids(token_list)
+            token_type_ids = [1] * len(token_list)
+            
+            token_tensor, token_type_ids_tensor = torch.tensor([token_ids]), torch.tensor([token_type_ids])
+            attention_mask = (token_tensor != self.tokenizer.pad_token_id).float()
+            
+            self.model.to(self.device)
+            
+            token_tensor = token_tensor.to(self.device)
+            token_type_ids_tensor = token_type_ids_tensor.to(self.device)
+            attention_mask = attention_mask.to(self.device)
+                            
+            outputs = self.model(
+                token_tensor, 
+                token_type_ids=token_type_ids_tensor,
+                attention_mask=attention_mask,
+                labels=None,
+            )
+            
+            label_list = [self.i2l[tag] for tag in torch.argmax(outputs[0], dim=-1).tolist()[0][1:-1]]
+            entities = self.label2entity(token_list=token_list[1:], label_list=label_list)
+            print(entities)
+            
+            return entities
         
     def decode(self, labels, pred_tags):
         true_y = []
@@ -139,3 +182,30 @@ class NER(NeuralBaseTask):
             pred_y.append(pred)
 
         return true_y, pred_y
+    
+    def label2entity(self, token_list, label_list):
+        entities = []
+        entity_buffer = []
+        for idx, label in enumerate(label_list):
+            if label == "O":
+                continue
+            
+            if label.startswith("S-"):
+                entities.append({
+                    "entity": token_list[idx],
+                    "label": label[2:]
+                })
+            
+            elif label.startswith("B-") or label.startswith("I-"):
+                entity_buffer.append(token_list[idx])
+            elif label.startswith("E-"):
+                entity_buffer.append(token_list[idx])
+                entities.append({
+                    "entity": self.tokenizer.convert_tokens_to_string(entity_buffer),
+                    "label": label[2:]
+                })
+                
+                entity_buffer.clear()
+                
+        return entities
+            

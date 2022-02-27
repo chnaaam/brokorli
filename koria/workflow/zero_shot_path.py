@@ -1,7 +1,7 @@
-from . import WorkflowBase
+from . import PathBase
 
 
-class MrcWorkflow(WorkflowBase):
+class ZeroShotPath(PathBase):
     
     """
     MRC Workflow
@@ -12,8 +12,9 @@ class MrcWorkflow(WorkflowBase):
     - Machine Reading Comprehension
     """
     
-    def __init__(self):
-        super().__init__()
+    def __init__(self, tasks):
+        self.qg_task = tasks["qg"]
+        self.mrc_task = tasks["mrc"]
         
-    def inference(self, **parameters):
+    def run(self, **parameters):
         pass

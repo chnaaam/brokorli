@@ -1,6 +1,7 @@
 import os
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
+import pickle
 import logging
 
 logger = logging.getLogger("koria")
@@ -13,6 +14,7 @@ from .utils import *
 from .data_loaders import load_data, DATASET_LIST
 from .tasks import TASK_LIST
 from .tokenizers import TOKENIZER_LIST, SPECIAL_TOKEN_LIST
+from .workflow import Workflow
 
 class KoRIA:
     
@@ -141,7 +143,18 @@ class KoRIA:
             # Add special tokens in tokenizer
             if task_name in SPECIAL_TOKEN_LIST:
                 tokenizer.add_special_tokens({"additional_special_tokens": list(SPECIAL_TOKEN_LIST[task_name].values())})
-                
+            
+            l2i, i2l = None, None
+            if task_name in ["ner"]:
+                with open(os.path.join(self.cfg.path.root, self.cfg.path.vocab, f"{task_name}.label"), "rb") as fp:
+                    data = pickle.load(fp)
+
+                if "l2i" not in data.keys():
+                    raise KeyError("Invalid label file. Please check label file and run it again")
+
+                l2i = data["l2i"]
+                i2l = {i: l for l, i in l2i.items()}
+            
             task = TASK_LIST[task_name](
                 
                 # Configuration for training
@@ -163,9 +176,18 @@ class KoRIA:
                 # Optional Parameters
                 # If a special token is added, the input size of the model is adjusted.
                 vocab_size=len(tokenizer),
+                
+                # Label Size
+                label_size=len(l2i) if l2i else None,
+                
+                # Token index in tokenizer and label-index pair
+                token_pad_id=tokenizer.pad_token_id,
+                l2i=l2i if l2i else None,
+                i2l=i2l if i2l else None,
             )
             
-            task.predict(sentence="홍길동의 아버지는 홍판서이다.", question="홍길동의 아내는 누구인가?")
+            # task.predict(sentence="홍길동의 아버지는 홍판서이다.", question="홍길동의 아내는 누구인가?")
+            task.predict(sentence="홍길동의 아버지는 홍길춘이다.")
             
         else:
             task = TASK_LIST[task_name](
@@ -180,41 +202,53 @@ class KoRIA:
             print(task.predict(entity="조세호", type="ps"))
         
     def pipeline(self):
-        task_dict = {}
+        tasks = {}
         
         for task_name in vars(self.cfg.tasks).keys():
             task_cfg = vars(self.cfg.tasks)[task_name]
             
-            tokenizer = TOKENIZER_LIST[task_cfg.model_name].from_pretrained(MODEL_NAME_LIST[task_cfg.model_name])
+            if task_name not in ["qg"]:
+                tokenizer = TOKENIZER_LIST[task_cfg.model_name].from_pretrained(MODEL_NAME_LIST[task_cfg.model_name])
+                
+                # Add special tokens in tokenizer
+                if task_name in SPECIAL_TOKEN_LIST:
+                    tokenizer.add_special_tokens({"additional_special_tokens": list(SPECIAL_TOKEN_LIST[task_name].values())})
+                
+                task = TASK_LIST[task_name](
+                
+                    # Configuration for training
+                    parameter_cfg=self.cfg.parameters,
+                    
+                    # Selected LM Model
+                    model_name=MODEL_NAME_LIST[task_cfg.model_name],
+                    model_type=task_cfg.model_type,
+                    
+                    # Tokenizer
+                    tokenizer=tokenizer,
+                    
+                    # Max sequence length
+                    max_seq_len=task_cfg.max_seq_len,
+                    
+                    # Use GPU or not
+                    use_cuda=self.cfg.use_cuda,
+                    
+                    # The model hub is a directory where models are stored when model training is over.
+                    model_hub_path=os.path.join(self.cfg.path.root, self.cfg.path.model),
+                    
+                    # Optional Parameters
+                    # If a special token is added, the input size of the model is adjusted.
+                    vocab_size=len(tokenizer),
+                )
+            else:
+                task = TASK_LIST[task_name](
+                    # Configuration
+                    cfg=task_cfg,
+                    
+                    # rule root directory
+                    rule_dir=self.cfg.path.rules
+                )
+                
+            tasks.setdefault(task_name, task)
             
-            # Add special tokens in tokenizer
-            if task_name in SPECIAL_TOKEN_LIST:
-                tokenizer.add_special_tokens({"additional_special_tokens": list(SPECIAL_TOKEN_LIST[task_name].values())})
-            
-            task = TASK_LIST[task_name](
-            
-                # Configuration for training
-                parameter_cfg=self.cfg.parameters,
-                
-                # Selected LM Model
-                model_name=MODEL_NAME_LIST[task_cfg.model_name],
-                model_type=task_cfg.model_type,
-                
-                # Tokenizer
-                tokenizer=tokenizer,
-                
-                # Max sequence length
-                max_seq_len=task_cfg.max_seq_len,
-                
-                # Use GPU or not
-                use_cuda=self.cfg.use_cuda,
-                
-                # The model hub is a directory where models are stored when model training is over.
-                model_hub_path=os.path.join(self.cfg.path.root, self.cfg.path.model),
-                
-                # Optional Parameters
-                # If a special token is added, the input size of the model is adjusted.
-                vocab_size=len(tokenizer),
-            )
-            
-            task_dict.setdefault(task_name, task)
+        workflow = Workflow(tasks=tasks)
+        
