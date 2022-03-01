@@ -47,6 +47,11 @@ class ZeroShotPath(PathBase):
                     obj_type = obj_info["label"].lower()
             
                     if (answer in obj or obj in answer) and obj_type in question_info["obj_types"]:
-                        triple_list.append((subj, relation, min(answer, obj, key=len)))
+                        if obj and answer:
+                            triple_list.append((subj, relation, min(answer, obj, key=len)))
+                        elif obj:
+                            triple_list.append((subj, relation, obj))
+                        else:
+                            triple_list.append((subj, relation, answer))
         
         return triple_list
