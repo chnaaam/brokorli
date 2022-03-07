@@ -128,8 +128,8 @@ class KoRIA:
         )
         
         # Train
-        # task.train()
-        task.valid()
+        task.train()
+        # task.valid()
     
     def predict(self, task_name):
         task_cfg = get_data_gene_config(cfg_path=self.cfg.path.config, cfg_fn=f"{task_name}.cfg")
@@ -186,8 +186,14 @@ class KoRIA:
                 i2l=i2l if i2l else None,
             )
             
-            # task.predict(sentence="홍길동의 아버지는 홍판서이다.", question="홍길동의 아내는 누구인가?")
-            task.predict(sentence="홍길동의 아버지는 홍길춘이다.")
+            print(
+                task.predict(
+                    # sentence="아이유(IU, 본명: 이지은, 李知恩[1], 1993년 5월 16일~)는 대한민국의 가수이자 배우이다. 배우로 활동할 때는 본명을 사용한다. '아이유(IU)'라는 예명은 'I'와 'You'를 합친 합성어로 '너와 내가 음악으로 하나가 된다.'라는 의미이다.", 
+                    sentence="홍길동의 아버지는 홍길춘이다.",
+                    question="홍길동 어머니의 이름은?"
+                )
+            )
+            # task.predict(sentence="홍길동의 아버지는 홍길춘이다.")
             
         else:
             task = TASK_LIST[task_name](

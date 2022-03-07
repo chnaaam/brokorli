@@ -1,3 +1,4 @@
+# 인물:출생_일시 - Object는 Subject의 출생일
 date_of_birth:
     obj_types:
         - dt
@@ -9,6 +10,17 @@ date_of_birth:
         - "{E}_이/가_ 태어난 날은 언제야?"
         - "{E}_은/는_ 언제 태어났어?"
 
+
+# 인물:출생_지역 - Object는 Subject가 태어난 지역
+place_of_birth:
+    obj_types:
+        - lc
+    templates:
+        - "{E}_이/가_ 태어난 장소는?"
+        - "{E}_은/는_ 어디서 태어났어?"
+
+
+# 인물:사망_일시 - Object는 Subject의 사망일
 date_of_death:
     obj_types:
         - dt
@@ -20,12 +32,139 @@ date_of_death:
         - "{E}_이/가_ 죽었던 날은 언제야?"
         - "{E}_은/는_ 언제 죽었어?"
 
-affiliation:
+
+# 인물:사망_지역 - Object는 Subject가 사망한 지역
+place_of_death:
+    obj_types:
+        - lc
+    templates:
+        - "{E}_이/가_ 죽은 장소는?"
+        - "{E}_은/는_ 어디서 죽었어?"
+
+
+# 인물:소재_지역 - Object는 Subject가 거주하는 지역
+place_of_residence:
+    obj_types:
+        - lc
+    templates:
+        - "{E}_이/가_ 살고 있는 곳은 어디야?"
+        - "{E}_이/가_ 거주하는 지역이 어디야?"
+
+
+# 인물: 출신 성분 / 국적, Object는 Subject의 출신 성분 혹인 국적
+origin:
     obj_types:
         - og
+        - lc
     templates:
-        - "{E}_이/가_ 다니는 회사는?"
-        - "{E}_은/는_ 어디 다녀?"
-        - "{E}_이/가_ 속한 곳은?"
-        - "{E}_은/는_ 어디서 일해?"
+        - "{E}_이/가_"
+
+
+# 인물:소속단체 - Object는 Subject가 근무하는 기관
+employee_of:
+    obj_types:
+        - og
+        - lc
+    templates:
+        - "{E}_이/가_"
+
+
+# 인물:학교 - Object는 Subject가 다닌 학교
+schools_attended:
+    obj_types:
+        - og
+        - lc
+    templates:
+        - "{E}_이/가_"
+
+
+# 인물:별칭 - Object는 Subject의 또다른 이름
+alternate_names:
+    obj_types:
+        - og
+        - lc
+    templates:
+        - "{E}_이/가_"
+
+
+# 인물:부모님 - Object는 Subject의 부모님
+parents:
+    obj_types:
+        - og
+        - lc
+    templates:
+        - "{E}_이/가_"
+
+
+# 인물:자녀 - Object는 Subject의 자녀
+children:
+    obj_types:
+        - og
+        - lc
+    templates:
+        - "{E}_이/가_"
+
+
+# 인물:형제/자매/남매 - Object는 Subject의 형제 자매 남매
+siblings:
+    obj_types:
+        - og
+        - lc
+    templates:
+        - "{E}_이/가_"
+
+
+# 인물:배우자 - Object는 Subject의 배우자
+siblings:
+    obj_types:
+        - og
+        - lc
+    templates:
+        - "{E}_이/가_"
+
+
+# 인물:기타_친족 - Object는 Subject의 기타 친족 (친척, 양자/녀 등)
+other_family:
+    obj_types:
+        - og
+        - lc
+    templates:
+        - "{E}_이/가_"
+
+
+# 인물:동료 - Object는 Subject의 동료
+colleagues:
+    obj_types:
+        - og
+        - lc
+    templates:
+        - "{E}_이/가_"
+
+
+# 인물:제작물 - Object는 Subject가 제작한 것
+product:
+    obj_types:
+        - og
+        - lc
+    templates:
+        - "{E}_이/가_"
+
+
+# 인물:종교 - Object는 Subject의 종교
+religion:
+    obj_types:
+        - og
+        - lc
+    templates:
+        - "{E}_이/가_"
+
+
+# 인물:직업/직함 - Object는 Subject의 직업/직함
+title:
+    obj_types:
+        - og
+        - lc
+    templates:
+        - "{E}_이/가_"
+
 

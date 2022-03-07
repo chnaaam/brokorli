@@ -14,10 +14,8 @@ class SequenceClassificationModel(nn.Module):
     def forward(self, X, **parameters):
         token_type_ids = parameters["token_type_ids"]
         attention_mask = parameters["attention_mask"]
-        labels = parameters["labels"].long()
-        # labels = torch.nn.functional.one_hot(labels.long())
-        
-        # TODO: Roberta does not need token_type_ids
+        labels = parameters["labels"]
+                
         if "roberta" not in self.model_name:
             outputs = self.model(
                 X,

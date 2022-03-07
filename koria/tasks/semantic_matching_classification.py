@@ -51,10 +51,10 @@ class SM(NeuralBaseTask):
             
             avg_valid_loss, avg_valid_f1_score, avg_valid_acc_score = self.valid()
             
-            print(f"Epoch : {epoch}\tTrain Loss : {avg_train_loss:.4f}\tValid Loss : {avg_valid_loss:.4f}\tValid F1 Score : {avg_valid_f1_score * 100:.4f}\tEM Score : {avg_valid_acc_score * 100:.4f}")
+            print(f"Epoch : {epoch}\tTrain Loss : {avg_train_loss:.4f}\tValid Loss : {avg_valid_loss:.4f}\tValid F1 Score : {avg_valid_f1_score * 100:.4f}\tAcc Score : {avg_valid_acc_score * 100:.4f}")
             
             if max_score < avg_valid_f1_score:
-                self.save_model(path=os.path.join(self.model_hub_path, f"mrc-e{epoch}-f1{avg_valid_f1_score * 100:.4f}-acc{avg_valid_acc_score * 100:.4f}-lr{self.cfg.learning_rate}-len{self.max_seq_len}.mdl"))
+                self.save_model(path=os.path.join(self.model_hub_path, f"mrc-e{epoch}-f1{avg_valid_f1_score * 100:.4f}-acc{avg_valid_acc_score * 100:.4f}-len{self.max_seq_len}.mdl"))
                 
     def valid(self):
         self.model.eval()
@@ -107,7 +107,7 @@ class SM(NeuralBaseTask):
         sentence = parameters["sentence"]
         question = parameters["question"]
         
-        self.load_model(path=os.path.join(self.model_hub_path, "mrc.mdl"))
+        self.load_model(path=os.path.join(self.model_hub_path, "sm.mdl"))
         self.model.eval()
         
         with torch.no_grad():
@@ -147,17 +147,13 @@ class SM(NeuralBaseTask):
             outputs = self.model(
                 token_tensor, 
                 token_type_ids=token_type_ids_tensor,
-                attention_mask=attention_mask,
-                start_positions=None,
-                end_positions=None,
+                attention_mask=(token_tensor != self.tokenizer.pad_token_id).float(),
+                labels=None,
             )
             
-            pred_begin_indexes = torch.argmax(outputs["start_logits"], dim=-1)
-            pred_end_indexes = torch.argmax(outputs["end_logits"], dim=-1)
-                
-            answers = []
-            for pred_begin_index, pred_end_index in zip(pred_begin_indexes, pred_end_indexes):
-                answers.append(self.tokenizer.convert_tokens_to_string(token_list[pred_begin_index: pred_end_index + 1]))
+            logits = outputs["logits"]
             
-            return answers
+            pred_label = torch.argmax(logits, dim=-1).tolist()[0]
+            
+            return pred_label
         
