@@ -11,7 +11,7 @@ class QG(RuleBasedTask):
         self.ENTITY_TOKEN = "{E}"
    
     def is_registered_entity_type(self, type):
-        return type.lower() in self.rules
+        return type.lower() in self.templates
    
     def predict(self, **parameters):
         
@@ -21,17 +21,17 @@ class QG(RuleBasedTask):
         entity = parameters["entity"]
         type = parameters["type"].lower()
         
-        if type not in self.rules.keys():
+        if type not in self.templates.keys():
             raise KeyError(f"{type} is not defined in rule files")
         
-        rules = self.rules[type]
+        templates = self.templates[type]
         
         questions = dict()
         
-        for relation, rule in rules.items():
-            questions.setdefault(relation, {"obj_types": rule["obj_types"], "questions": []})
+        for relation, template in templates.items():
+            questions.setdefault(relation, {"obj_types": template["obj_types"], "questions": []})
             
-            for template in rule["templates"]:
+            for template in template["templates"]:
                 questions[relation]["questions"].append(self.reconstruct_question(template, entity))
         
         return questions

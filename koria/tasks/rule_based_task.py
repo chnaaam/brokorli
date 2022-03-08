@@ -10,23 +10,23 @@ class RuleBasedTask(metaclass=ABCMeta):
     """
     def __init__(self, **parameters):
         self.cfg = parameters["cfg"]
-        self.rule_dir = parameters["rule_dir"]
+        self.template_dir = parameters["template_dir"]
                 
-        if self.cfg.template.path not in os.listdir(self.rule_dir):
-            raise FileNotFoundError(f"Rule directory is not existed in {os.path.abspath(os.path.join(self.rule_dir, self.cfg.template.path))}")
+        if self.cfg.template.path not in os.listdir(self.template_dir):
+            raise FileNotFoundError(f"Template directory is not existed in {os.path.abspath(os.path.join(self.rule_dir, self.cfg.template.path))}")
         
-        rule_list = os.listdir(os.path.join(self.rule_dir, self.cfg.template.path))
+        template_file_list = os.listdir(os.path.join(self.template_dir, self.cfg.template.path))
         
-        if not rule_list:
-            raise ValueError(f"Rule files are not existed in {os.path.abspath(os.path.join(self.rule_dir, self.cfg.template.path))}")
+        if not template_file_list:
+            raise ValueError(f"Template files are not existed in {os.path.abspath(os.path.join(self.rule_dir, self.cfg.template.path))}")
         
-        self.rules = dict()
-        for rule_fn in rule_list:
-            with open(os.path.join(self.rule_dir, self.cfg.template.path, rule_fn), "r", encoding="utf-8") as fp:
-                rule = yaml.load(fp, Loader=yaml.FullLoader)
+        self.templates = dict()
+        for template_fn in template_file_list:
+            with open(os.path.join(self.template_dir, self.cfg.template.path, template_fn), "r", encoding="utf-8") as fp:
+                template = yaml.load(fp, Loader=yaml.FullLoader)
                 
-            if rule:
-                self.rules.setdefault(rule_fn.split(".")[0], rule)
+            if template:
+                self.templates.setdefault(template_fn.split(".")[0], template)
     
     @abstractmethod
     def predict(self, **parameters):

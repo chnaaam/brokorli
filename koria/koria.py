@@ -201,8 +201,8 @@ class KoRIA:
                 # Configuration
                 cfg=task_cfg,
                 
-                # rule root directory
-                rule_dir=self.cfg.path.rules
+                # template root directory
+                template_dir=self.cfg.path.template
             )
             
             task.predict(entity="조세호", type="ps")
