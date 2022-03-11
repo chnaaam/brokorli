@@ -1,5 +1,4 @@
 import os
-from tkinter import E
 import yaml
 
 
