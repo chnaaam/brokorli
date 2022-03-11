@@ -14,7 +14,7 @@ class DatasetBase(Dataset, metaclass=ABCMeta):
         model_name, 
         data_list, 
         cache_dir, 
-        vocab_dir, 
+        label_dir, 
         build_dataset_func, 
         dataset_type="train", 
         max_seq_len=256, 
@@ -26,18 +26,15 @@ class DatasetBase(Dataset, metaclass=ABCMeta):
         self.task_name = task_name
         self.model_name = model_name
         self.data_list = data_list
+        self.dataset = []
         
         self.cache_dir = cache_dir
-        self.vocab_dir = vocab_dir
+        self.label_dir = label_dir
         
         self.dataset_type = dataset_type
         self.max_seq_len = max_seq_len
-        
-        self.special_tokens = special_tokens
                 
         self.build_dataset_func = build_dataset_func
-        
-        self.dataset = []
         
         self.build()
         
@@ -58,12 +55,10 @@ class DatasetBase(Dataset, metaclass=ABCMeta):
             self.dataset = self.load_cache_file(cache_path)
     
     def build_vocab(self, vocab):
-        vocab_path = os.path.join(self.vocab_dir, f"{self.task_name}.label")
+        vocab_path = os.path.join(self.label_dir, f"{self.task_name}.label")
         
         if not os.path.isfile(vocab_path):
-            self.vocab = list(self.special_tokens.values()) + vocab
-            
-            self.l2i = {l: i for i, l in enumerate(self.vocab)}
+            self.l2i = {l: i for i, l in enumerate(vocab)}
             self.i2l = {i: l for l, i in self.l2i.items()}
         
             with open(vocab_path, "wb") as fp:

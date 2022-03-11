@@ -17,7 +17,7 @@ class ConfigBase:
                 self.__setattr__(key, value)
 
 
-def get_data_gene_config(cfg_path, cfg_fn):
+def get_config(cfg_path, cfg_fn):
     """
     Load configuration file
 

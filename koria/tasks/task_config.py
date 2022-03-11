@@ -1,53 +1,51 @@
+from . import OPTIMIZER_LIST
+
 class TaskConfig:
     def __init__(
         self, 
         
+        task_name,
+        task_cfg,
         model_name, 
-        model_type, 
         tokenizer,
         
-        # Training parameters
-        train_dataset=None, 
-        valid_dataset=None, 
-        test_dataset=None, 
-        
-        optimizer=None,
-        
-        epochs=0,
-        learning_rate=0.0001, 
-        weight_decay=0,
-        train_batch_size=1,
-        eval_batch_size=1,
-        dataloader_num_workers=0,
-        max_seq_len=256, 
-        
+        train_data_loader=None, 
+        valid_data_loader=None, 
+        test_data_loader=None, 
+                
         model_hub_path="",
         label_hub_path="",
         
-        use_gpu=False, 
+        use_cuda=False, 
         use_fp16=False):
         
+        self.task_name = task_name
         self.model_name = model_name
-        self.model_type = model_type
+        self.model_type = task_cfg.model_type
         self.tokenizer = tokenizer
         
-        self.train_dataset = train_dataset
-        self.valid_dataset = valid_dataset
-        self.test_dataset = test_dataset
+        self.train_data_loader = train_data_loader
+        self.valid_data_loader = valid_data_loader
+        self.test_data_loader = test_data_loader
         
-        self.optimizer = optimizer
+        self.optimizer = OPTIMIZER_LIST[task_cfg.parameters.optimizer]
         
-        self.epochs = epochs
-        self.learning_rate = learning_rate
-        self.weight_decay = weight_decay
-        self.train_batch_size = train_batch_size
-        self.eval_batch_size = eval_batch_size
-        self.dataloader_num_workers = dataloader_num_workers
-        self.max_seq_len = max_seq_len
+        self.epochs = task_cfg.parameters.epochs
+        self.learning_rate = task_cfg.parameters.learning_rate
+        self.weight_decay = task_cfg.parameters.weight_decay
+        self.train_batch_size = task_cfg.parameters.train_batch_size
+        self.valid_batch_size = task_cfg.parameters.valid_batch_size
+        self.test_batch_size = task_cfg.parameters.test_batch_size
+        
+        self.train_num_workers = task_cfg.parameters.train_num_workers
+        self.valid_num_workers = task_cfg.parameters.valid_num_workers
+        self.test_num_workers = task_cfg.parameters.test_num_workers
+        
+        self.max_seq_len = task_cfg.parameters.max_seq_len
         
         self.model_hub_path = model_hub_path
         self.label_hub_path = label_hub_path
         
-        self.use_gpu = use_gpu
+        self.use_cuda = use_cuda
         self.use_fp16 = use_fp16
     

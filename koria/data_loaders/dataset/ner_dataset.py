@@ -1,16 +1,12 @@
-import os
-import pickle
 import torch
 import logging
 
 logger = logging.getLogger("koria")
 
 from collections import deque
-from tqdm import tqdm
-from torch.utils.data import Dataset
 
 from . import DatasetBase
-
+from koria.special_tokens import LABEL_PAD_TOKEN
 class NerDataset(DatasetBase):
     
     def __init__(
@@ -20,7 +16,7 @@ class NerDataset(DatasetBase):
         model_name, 
         data_list, 
         cache_dir, 
-        vocab_dir, 
+        label_dir, 
         dataset_type="train", 
         max_seq_len=256, 
         special_tokens=None):
@@ -31,19 +27,13 @@ class NerDataset(DatasetBase):
             model_name=model_name,
             data_list=data_list,
             cache_dir=cache_dir,
-            vocab_dir=vocab_dir,
+            label_dir=label_dir,
             dataset_type=dataset_type,
             max_seq_len=max_seq_len,
-            special_tokens=special_tokens,
             build_dataset_func=self.build_dataset
         )
         
-        self.LABEL_PAD_TOKEN = "[PAD]"
-        self.SPECIAL_LABEL_TOKENS = {
-            "pad": self.LABEL_PAD_TOKEN
-        }
-        
-        vocab = [self.LABEL_PAD_TOKEN]
+        vocab = [LABEL_PAD_TOKEN]
         for dataset in self.dataset:
             vocab += dataset["labels"]
         
@@ -153,13 +143,16 @@ class NerDataset(DatasetBase):
         labels = self.dataset[idx]["labels"]
         
         token_list = [self.tokenizer.cls_token] + tokens + [self.tokenizer.sep_token]
+        token_type_ids = [1] * len(token_list)
         label_list = ["O"] + labels + ["O"]
         
         if len(token_list) <= self.max_seq_len:
             token_list += [self.tokenizer.pad_token] * (self.max_seq_len - len(token_list))
-            label_list += [self.LABEL_PAD_TOKEN] * (self.max_seq_len - len(label_list))
+            token_type_ids += [0] * (self.max_seq_len - len(token_type_ids))
+            label_list += [LABEL_PAD_TOKEN] * (self.max_seq_len - len(label_list))
         else:
             token_list = token_list[:self.max_seq_len]
+            token_type_ids = token_type_ids[:self.max_seq_len]
             label_list = label_list[:self.max_seq_len]
             
             if label_list[-1] != "O":
@@ -170,8 +163,11 @@ class NerDataset(DatasetBase):
                 
             
         token_ids = self.tokenizer.convert_tokens_to_ids(token_list)
-        token_type_ids = [1] * len(token_list)
         label_ids = [self.l2i[label] for label in label_list]
         
+        input_ids = torch.tensor(token_ids)
+        token_type_ids = torch.tensor(token_type_ids)
+        attention_mask = (input_ids != self.tokenizer.pad_token_id)
+        label_ids = torch.tensor(label_ids)
         
-        return torch.tensor(token_ids), torch.tensor(token_type_ids), torch.tensor(label_ids)
+        return input_ids, token_type_ids, attention_mask, label_ids

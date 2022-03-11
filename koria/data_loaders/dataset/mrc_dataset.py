@@ -15,7 +15,7 @@ class MrcDataset(DatasetBase):
         model_name, 
         data_list, 
         cache_dir, 
-        vocab_dir, 
+        label_dir, 
         dataset_type="train", 
         max_seq_len=256, 
         special_tokens=None):
@@ -26,7 +26,7 @@ class MrcDataset(DatasetBase):
             model_name=model_name,
             data_list=data_list,
             cache_dir=cache_dir,
-            vocab_dir=vocab_dir,
+            label_dir=label_dir,
             dataset_type=dataset_type,
             max_seq_len=max_seq_len,
             special_tokens=special_tokens,

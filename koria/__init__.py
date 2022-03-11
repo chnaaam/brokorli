@@ -8,10 +8,7 @@ MODEL_NAME_LIST = {
     "klueroberta": "klue/roberta-base"
 }
 
-OPTIMIZER_LIST = {
-    "adam": optim.Adam,
-    "adamw": optim.AdamW
-}
+
 
 
 from .koria import KoRIA

@@ -1,3 +1,5 @@
+import torch.optim as optim
+
 from .named_entity_recognition import NER
 from .machine_reading_comprehension import MRC
 from .question_generation import QG
@@ -19,3 +21,10 @@ TASK_LIST = {
     "qg": QG,
     "sm": SM
 }
+
+OPTIMIZER_LIST = {
+    "adam": optim.Adam,
+    "adamw": optim.AdamW
+}
+
+from .task_config import TaskConfig

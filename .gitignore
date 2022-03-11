@@ -9,5 +9,6 @@ data/
 venv/
 model/
 hub/
+!koria/data_loaders/data
 test.py
 task_performance.txt

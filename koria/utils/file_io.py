@@ -16,3 +16,10 @@ def is_existed_file(file_full_path):
         return True
     
     return False
+
+def save_label_file(path, data):
+    pass
+
+def load_label_file(path):
+    with open(path):
+        pass
