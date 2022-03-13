@@ -3,12 +3,14 @@ import torch.nn as nn
 from transformers import AutoConfig, AutoModelForTokenClassification
 
 class SequenceLabelingModel(nn.Module):
-    def __init__(self, model_name, num_labels, vocab_size=None):
+    def __init__(self, model_name, num_labels=None, vocab_size=None):
         super().__init__()
         
         self.model_name = model_name
+        config = AutoConfig.from_pretrained(model_name)
         
-        config = AutoConfig.from_pretrained(model_name, num_labels=num_labels)
+        if num_labels:
+            config.num_labels = num_labels    
         
         self.model = AutoModelForTokenClassification.from_config(config)
         

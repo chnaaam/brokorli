@@ -18,6 +18,7 @@ class NeuralBaseTask(metaclass=ABCMeta):
     def __init__(self, config):
         self.config = config
         
+        self.l2i, self.i2l = None, None
         if config.label_hub_path and os.path.isfile(os.path.join(config.label_hub_path, f"{config.task_name}.label")):
             with open(os.path.join(config.label_hub_path, f"{config.task_name}.label"), "rb") as fp:
                 self.l2i = pickle.load(fp)["l2i"]
@@ -25,7 +26,7 @@ class NeuralBaseTask(metaclass=ABCMeta):
                 
         self.model = MODEL_LIST[config.model_type](
             model_name=config.model_name,
-            num_labels=len(self.l2i),
+            num_labels=len(self.l2i) if self.l2i else None,
             vocab_size=len(config.tokenizer))
         
         self.tokenizer = config.tokenizer
@@ -38,7 +39,6 @@ class NeuralBaseTask(metaclass=ABCMeta):
             config.train_data_loader
         )
         
-        # self.MODEL_PATH = "ner-e{epoch}-{avg_valid_f1_score * 100:.4f}-lr{self.config.learning_rate}-len{self.config.max_seq_len}.mdl"
         self.MODEL_PATH = self.config.task_name + ".e{0}.score{1:02.2f}" + f".lr{self.config.learning_rate}.len{self.config.max_seq_len}.mdl"
         self.previous_model_path = ""
     

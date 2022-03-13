@@ -50,7 +50,7 @@ class NER(NeuralBaseTask):
             print(f"Epoch : {epoch}\tTrain Loss : {avg_train_loss:.4f}\tValid Loss : {avg_valid_loss:.4f}\tValid F1 Score : {avg_valid_f1_score * 100:.4f}")
             
             if max_score < avg_valid_f1_score:
-                self.update_trained_model(self.MODEL_PATH.format(epoch, avg_valid_f1_score))
+                self.update_trained_model(self.MODEL_PATH.format(epoch, avg_valid_f1_score * 100))
                 
     def valid(self):
         self.model.eval()

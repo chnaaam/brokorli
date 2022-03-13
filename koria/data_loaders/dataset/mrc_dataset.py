@@ -17,8 +17,7 @@ class MrcDataset(DatasetBase):
         cache_dir, 
         label_dir, 
         dataset_type="train", 
-        max_seq_len=256, 
-        special_tokens=None):
+        max_seq_len=256):
         
         super().__init__(
             tokenizer=tokenizer,
@@ -29,7 +28,6 @@ class MrcDataset(DatasetBase):
             label_dir=label_dir,
             dataset_type=dataset_type,
             max_seq_len=max_seq_len,
-            special_tokens=special_tokens,
             build_dataset_func=self.build_dataset
         )
         
@@ -95,7 +93,7 @@ class MrcDataset(DatasetBase):
         len_c_tokens = len(context_tokens)
         len_q_tokens = len(question_tokens)
         
-        # huggingface run_squad.py idea
+        # huggingface run_squad.py
         doc_stride = 64
         
         adjusted_len_c_tokens = self.max_seq_len - 2 - len_q_tokens
@@ -113,12 +111,9 @@ class MrcDataset(DatasetBase):
                 end_doc_stride = len_c_tokens - answer_end_idx
                 
             if answer_end_idx + end_doc_stride > adjusted_len_c_tokens:
-                # TODO ...
-                
                 # Context token slide window
                 ct_end_idx = answer_end_idx + end_doc_stride
                 ct_begin_idx = ct_end_idx - adjusted_len_c_tokens
-                
                 
                 # Adjust answer begin and end index
                 answer_be_interval = answer_end_idx - answer_begin_idx
@@ -142,4 +137,10 @@ class MrcDataset(DatasetBase):
         token_ids = self.tokenizer.convert_tokens_to_ids(token_list)
         token_type_ids = [0] * len([self.tokenizer.cls_token] + question_tokens + [self.tokenizer.sep_token]) + [1] * len(context_tokens)
         
-        return torch.tensor(token_ids), torch.tensor(token_type_ids), torch.tensor(answer_begin_idx), torch.tensor(answer_end_idx)
+        input_ids = torch.tensor(token_ids)
+        token_type_ids = torch.tensor(token_type_ids)
+        attention_mask = (input_ids != self.tokenizer.pad_token_id)
+        answer_begin_idx_tensor = torch.tensor(answer_begin_idx)
+        answer_end_idx_tensor = torch.tensor(answer_end_idx)
+        
+        return input_ids, token_type_ids, attention_mask, answer_begin_idx_tensor, answer_end_idx_tensor

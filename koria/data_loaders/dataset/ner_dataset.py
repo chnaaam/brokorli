@@ -18,8 +18,7 @@ class NerDataset(DatasetBase):
         cache_dir, 
         label_dir, 
         dataset_type="train", 
-        max_seq_len=256, 
-        special_tokens=None):
+        max_seq_len=256):
         
         super().__init__(
             tokenizer=tokenizer,

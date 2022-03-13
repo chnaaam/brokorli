@@ -17,8 +17,7 @@ class DatasetBase(Dataset, metaclass=ABCMeta):
         label_dir, 
         build_dataset_func, 
         dataset_type="train", 
-        max_seq_len=256, 
-        special_tokens=None):
+        max_seq_len=256):
         
         super().__init__()
         

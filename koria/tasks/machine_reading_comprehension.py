@@ -8,16 +8,14 @@ from koria.metrics import calculate_qa_f1_score, calculate_em_score
 
 class MRC(NeuralBaseTask):
 
-    def __init__(self, **parameters):
-                
-        # Set common parameters for TaskBase and build model
-        super().__init__(model_parameters=None, **parameters)
+    def __init__(self, task_config):
+        super().__init__(config=task_config)
         
     def train(self):
         
         max_score = 0
         
-        for epoch in range(int(self.cfg.parameters.epochs)):
+        for epoch in range(int(self.config.epochs)):
             self.model.train()
             train_losses = []
             avg_train_loss = 0
@@ -26,19 +24,14 @@ class MRC(NeuralBaseTask):
             for data in progress_bar:
                 progress_bar.set_description(f"[Training] Epoch : {epoch}, Avg Loss : {avg_train_loss:.4f}")
                 
-                token_tensor, token_type_ids_tensor, answer_begin_idx_tensor, answer_end_idx_tensor = data
-                
-                token_tensor.to(self.device)
-                token_type_ids_tensor.to(self.device)
-                answer_begin_idx_tensor.to(self.device)
-                answer_end_idx_tensor.to(self.device)
+                input_ids, token_type_ids, attention_mask, answer_begin_idx_tensor, answer_end_idx_tensor = data
                 
                 self.optimizer.zero_grad()
                 
                 outputs = self.model(
-                    token_tensor, 
-                    token_type_ids=token_type_ids_tensor,
-                    attention_mask=(token_tensor != self.tokenizer.pad_token_id).float(),
+                    input_ids=input_ids, 
+                    token_type_ids=token_type_ids,
+                    attention_mask=attention_mask,
                     start_positions=answer_begin_idx_tensor,
                     end_positions=answer_end_idx_tensor,
                 )
@@ -54,10 +47,10 @@ class MRC(NeuralBaseTask):
             
             avg_valid_loss, avg_valid_f1_score, avg_valid_em_score = self.valid()
             
-            print(f"Epoch : {epoch}\tTrain Loss : {avg_train_loss:.4f}\tValid Loss : {avg_valid_loss:.4f}\tValid F1 Score : {avg_valid_f1_score * 100:.4f}\tEM Score : {avg_valid_em_score * 100:.4f}")
+            print(f"Epoch : {epoch}\tTrain Loss : {avg_train_loss:.4f}\tValid Loss : {avg_valid_loss:.4f}\tValid F1 Score : {avg_valid_f1_score * 100:.4f}")
             
             if max_score < avg_valid_f1_score:
-                self.save_model(path=os.path.join(self.model_hub_path, f"mrc-e{epoch}-f1{avg_valid_f1_score * 100:.4f}-em{avg_valid_em_score * 100:.4f}-lr{self.cfg.learning_rate}-len{self.max_seq_len}.mdl"))
+                self.update_trained_model(self.MODEL_PATH.format(epoch, f"{avg_valid_f1_score * 100:.2f}.em{avg_valid_em_score * 100:.2f}"))
                 
     def valid(self):
         self.model.eval()
@@ -70,20 +63,17 @@ class MRC(NeuralBaseTask):
             for data in progress_bar:
                 progress_bar.set_description(f"[Validation] Avg Loss : {avg_valid_loss:.4f} Avg Score : {avg_valid_f1_score * 100:.4f}")
                 
-                token_tensor, token_type_ids_tensor, answer_begin_idx_tensor, answer_end_idx_tensor = data
-                attention_mask=(token_tensor != self.tokenizer.pad_token_id).float(),
-                
-                self.model.to(self.device)
-                
-                token_tensor = token_tensor.to(self.device)
-                token_type_ids_tensor = token_type_ids_tensor.to(self.device)
-                attention_mask = attention_mask.to(self.device)
-                answer_begin_idx_tensor = answer_begin_idx_tensor.to(self.device)
-                answer_end_idx_tensor = answer_end_idx_tensor.to(self.device)
+                input_ids, token_type_ids, attention_mask, answer_begin_idx_tensor, answer_end_idx_tensor = data
+                input_ids, token_type_ids, attention_mask, label_ids = (
+                    input_ids.to(self.device),
+                    token_type_ids.to(self.device),
+                    attention_mask.to(self.device),
+                    label_ids.to(self.device)
+                )
                                 
                 outputs = self.model(
-                    token_tensor, 
-                    token_type_ids=token_type_ids_tensor,
+                    input_ids=input_ids, 
+                    token_type_ids=token_type_ids,
                     attention_mask=attention_mask,
                     start_positions=answer_begin_idx_tensor,
                     end_positions=answer_end_idx_tensor,

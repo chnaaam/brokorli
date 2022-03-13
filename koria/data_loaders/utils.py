@@ -34,14 +34,19 @@ def load_data_loader(task_cfg, task_name, tokenizer, cache_dir, label_dir):
     if is_existed_single_data_cfg(task_cfg.dataset) and not is_existed_train_valid_test_data_cfg(task_cfg.dataset):
         if not os.path.exists(train_data_path) or not os.path.exists(valid_data_path) or not os.path.exists(test_data_path):
             split_single_dataset_to_three(task_cfg, task_name, train_data_path, valid_data_path, test_data_path)        
+            
+        datasets["train"]["data"] = load_splitted_dataset(path=train_data_path)
+        datasets["valid"]["data"] = load_splitted_dataset(path=valid_data_path)
+        datasets["test"]["data"] = load_splitted_dataset(path=test_data_path)
+        
     else:
         train_data_path = os.path.join(task_cfg.dataset.path, task_cfg.dataset.train_fn)
         valid_data_path = os.path.join(task_cfg.dataset.path, task_cfg.dataset.valid_fn)
         test_data_path = os.path.join(task_cfg.dataset.path, task_cfg.dataset.test_fn)
 
-    datasets["train"]["data"] = load_splitted_dataset(path=train_data_path)
-    datasets["valid"]["data"] = load_splitted_dataset(path=valid_data_path)
-    datasets["test"]["data"] = load_splitted_dataset(path=test_data_path)
+        datasets["train"]["data"] = DATA_LIST[task_name](dataset_path=train_data_path).data
+        datasets["valid"]["data"] = DATA_LIST[task_name](dataset_path=valid_data_path).data
+        datasets["test"]["data"] = DATA_LIST[task_name](dataset_path=test_data_path).data
     
     return return_data_loader(task_cfg, task_name, tokenizer, cache_dir, label_dir, datasets)
     
