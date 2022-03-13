@@ -37,11 +37,16 @@ class MrcDataset(DatasetBase):
         answer = data["answer"]
 
         try:
+            if context[data["answer"]["begin"]: data["answer"]["end"]+1] == "1839":
+                print()
+                
             context_token_list = self.tokenizer.tokenize(context)
             question_token_list = self.tokenizer.tokenize(question)
             
             answer = self.adjust_answer_position(context=context, answer=answer)
             
+            if self.tokenizer.convert_tokens_to_string(context_token_list[answer["begin"]: answer["end"]+1]) != context[data["answer"]["begin"]: data["answer"]["end"]+1]:
+                print()
             return {
                 "context": context_token_list,
                 "question": question_token_list,
@@ -61,15 +66,20 @@ class MrcDataset(DatasetBase):
             "end": -1
         }
         
-        offsets = self.tokenizer(context, return_offsets_mapping=True)["offset_mapping"]
+        offsets = self.tokenizer(context, return_offsets_mapping=True)["offset_mapping"][:-1]
         
         for offset_idx, (word_begin_idx, word_end_idx) in enumerate(offsets):
+            
+            if offset_idx == 0:
+                continue
+            
+            word_end_idx = word_end_idx - 1
             
             if word_begin_idx <= answer_begin_idx <= word_end_idx and word_begin_idx <= answer_end_idx <= word_end_idx:
                 adjusted_answer["begin"] = offset_idx - 1
                 adjusted_answer["end"] = offset_idx - 1
                 
-                continue
+                break
             
             if word_begin_idx <= answer_begin_idx <= word_end_idx or \
                 word_begin_idx <= answer_end_idx <= word_end_idx or \
@@ -133,13 +143,13 @@ class MrcDataset(DatasetBase):
         answer_end_idx += len_q_tokens + 2
         
         token_list = [self.tokenizer.cls_token] + question_tokens + [self.tokenizer.sep_token] + context_tokens
-        
+                
         token_ids = self.tokenizer.convert_tokens_to_ids(token_list)
         token_type_ids = [0] * len([self.tokenizer.cls_token] + question_tokens + [self.tokenizer.sep_token]) + [1] * len(context_tokens)
         
         input_ids = torch.tensor(token_ids)
         token_type_ids = torch.tensor(token_type_ids)
-        attention_mask = (input_ids != self.tokenizer.pad_token_id)
+        attention_mask = (input_ids != self.tokenizer.pad_token_id).float()
         answer_begin_idx_tensor = torch.tensor(answer_begin_idx)
         answer_end_idx_tensor = torch.tensor(answer_end_idx)
         
