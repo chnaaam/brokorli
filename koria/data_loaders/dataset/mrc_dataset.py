@@ -36,17 +36,12 @@ class MrcDataset(DatasetBase):
         question = data["question"]
         answer = data["answer"]
 
-        try:
-            if context[data["answer"]["begin"]: data["answer"]["end"]+1] == "1839":
-                print()
-                
+        try:    
             context_token_list = self.tokenizer.tokenize(context)
             question_token_list = self.tokenizer.tokenize(question)
             
             answer = self.adjust_answer_position(context=context, answer=answer)
             
-            if self.tokenizer.convert_tokens_to_string(context_token_list[answer["begin"]: answer["end"]+1]) != context[data["answer"]["begin"]: data["answer"]["end"]+1]:
-                print()
             return {
                 "context": context_token_list,
                 "question": question_token_list,
