@@ -43,13 +43,13 @@ class MRC(NeuralBaseTask):
                 train_losses.append(loss.item())
                 
                 avg_train_loss = sum(train_losses) / len(train_losses)
-            
+                break
             avg_valid_loss, avg_valid_f1_score, avg_valid_em_score = self.valid()
             
             print(f"Epoch : {epoch}\tTrain Loss : {avg_train_loss:.4f}\tValid Loss : {avg_valid_loss:.4f}\tValid F1 Score : {avg_valid_f1_score * 100:.4f}")
             
             if max_score < avg_valid_f1_score:
-                self.update_trained_model(self.MODEL_PATH.format(epoch, f"{avg_valid_f1_score * 100:.2f}.em{avg_valid_em_score * 100:.2f}"))
+                self.update_trained_model(self.MODEL_PATH.format(epoch, avg_valid_f1_score * 100))
                 
     def valid(self):
         self.model.eval()
@@ -104,7 +104,7 @@ class MRC(NeuralBaseTask):
                 avg_valid_loss = sum(valid_losses) / len(valid_losses)    
                 avg_valid_f1_score = sum(valid_f1_scores) / len(valid_f1_scores)    
                 avg_valid_em_score = sum(valid_em_scores) / len(valid_em_scores)    
-                
+                break
             return avg_valid_loss, avg_valid_f1_score, avg_valid_em_score
     
     def test(self):
