@@ -101,7 +101,7 @@ class MrcDataset(DatasetBase):
         # huggingface run_squad.py
         doc_stride = 64
         
-        adjusted_len_c_tokens = self.max_seq_len - 2 - len_q_tokens
+        adjusted_len_c_tokens = self.max_seq_len - 3 - len_q_tokens
         
         if adjusted_len_c_tokens < len_c_tokens:
             
@@ -130,15 +130,15 @@ class MrcDataset(DatasetBase):
                 ct_begin_idx = 0
                 ct_end_idx = adjusted_len_c_tokens
                 
-            context_tokens = context_tokens[ct_begin_idx: ct_end_idx]
+            context_tokens = context_tokens[ct_begin_idx: ct_end_idx] + [self.tokenizer.sep_token]
         else:
-            context_tokens += [self.tokenizer.pad_token] * (adjusted_len_c_tokens - len_c_tokens)
+            context_tokens += [self.tokenizer.sep_token] + [self.tokenizer.pad_token] * (adjusted_len_c_tokens - len_c_tokens)
             
         answer_begin_idx += len_q_tokens + 2
         answer_end_idx += len_q_tokens + 2
         
         token_list = [self.tokenizer.cls_token] + question_tokens + [self.tokenizer.sep_token] + context_tokens
-                
+        
         token_ids = self.tokenizer.convert_tokens_to_ids(token_list)
         token_type_ids = [0] * len([self.tokenizer.cls_token] + question_tokens + [self.tokenizer.sep_token]) + [1] * len(context_tokens)
         

@@ -16,6 +16,7 @@ class MRC(NeuralBaseTask):
         
         for epoch in range(int(self.config.epochs)):
             self.model.train()
+            
             train_losses = []
             avg_train_loss = 0
             

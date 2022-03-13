@@ -1,5 +1,3 @@
-import torch.optim as optim
-
 MODEL_NAME_LIST = {
     "bert": "bert-base-multilingual-cased",
     "kobert": "monologg/kobert",

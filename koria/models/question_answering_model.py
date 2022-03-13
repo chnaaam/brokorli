@@ -7,15 +7,7 @@ class QuestionAnsweringModel(nn.Module):
         super().__init__()
         
         self.model_name = model_name
-        config = AutoConfig.from_pretrained(model_name)
-        
-        if num_labels:
-            config.num_labels = num_labels    
-        
-        self.model = AutoModelForQuestionAnswering.from_config(config)
-        
-        if vocab_size:
-            self.model.resize_token_embeddings(vocab_size)
+        self.model = AutoModelForQuestionAnswering.from_pretrained(model_name)   
         
     def forward(self, **parameters):
         input_ids = parameters["input_ids"]

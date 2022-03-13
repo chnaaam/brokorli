@@ -33,6 +33,7 @@ class TaskConfig:
         self.epochs = task_cfg.parameters.epochs
         self.learning_rate = task_cfg.parameters.learning_rate
         self.weight_decay = task_cfg.parameters.weight_decay
+        
         self.train_batch_size = task_cfg.parameters.train_batch_size
         self.valid_batch_size = task_cfg.parameters.valid_batch_size
         self.test_batch_size = task_cfg.parameters.test_batch_size
