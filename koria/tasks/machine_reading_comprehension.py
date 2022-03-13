@@ -12,7 +12,6 @@ class MRC(NeuralBaseTask):
         super().__init__(config=task_config)
         
     def train(self):
-        
         max_score = 0
         
         for epoch in range(int(self.config.epochs)):
@@ -59,16 +58,17 @@ class MRC(NeuralBaseTask):
             valid_losses, valid_f1_scores, valid_em_scores = [], [], []
             avg_valid_loss, avg_valid_f1_score, avg_valid_em_score = 0, 0, 0
             
-            progress_bar = tqdm(self.valid_data_loader)
+            progress_bar = tqdm(self.config.valid_data_loader)
             for data in progress_bar:
                 progress_bar.set_description(f"[Validation] Avg Loss : {avg_valid_loss:.4f} Avg Score : {avg_valid_f1_score * 100:.4f}")
                 
                 input_ids, token_type_ids, attention_mask, answer_begin_idx_tensor, answer_end_idx_tensor = data
-                input_ids, token_type_ids, attention_mask, label_ids = (
+                input_ids, token_type_ids, attention_mask, answer_begin_idx_tensor, answer_end_idx_tensor = (
                     input_ids.to(self.device),
                     token_type_ids.to(self.device),
                     attention_mask.to(self.device),
-                    label_ids.to(self.device)
+                    answer_begin_idx_tensor.to(self.device),
+                    answer_end_idx_tensor.to(self.device)
                 )
                                 
                 outputs = self.model(
@@ -89,7 +89,7 @@ class MRC(NeuralBaseTask):
                 valid_losses.append(loss.item())
                 
                 true_answers, pred_answers = self.decode(
-                    token_tensor,
+                    input_ids,
                     answer_begin_idx_tensor.tolist(), 
                     answer_end_idx_tensor.tolist(), 
                     pred_begin_indexes.tolist(), 
