@@ -85,7 +85,7 @@ class SM(NeuralBaseTask):
                 valid_losses.append(loss.item())
                 
                 pred_tags = torch.argmax(logits, dim=-1)
-                score = calculate_sc_score(true_y=input_ids.float().tolist(), pred_y=pred_tags.tolist())
+                score = calculate_sc_score(true_y=label_ids.float().tolist(), pred_y=pred_tags.tolist())
                 
                 
                 valid_f1_scores.append(score["f1"])
