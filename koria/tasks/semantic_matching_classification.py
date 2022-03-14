@@ -105,9 +105,6 @@ class SM(NeuralBaseTask):
         sentence = parameters["sentence"]
         question = parameters["question"]
         
-        self.load_model(path=os.path.join(self.model_hub_path, "sm.mdl"))
-        self.model.eval()
-        
         with torch.no_grad():
             if type(question) == str:
                 question = [question]
@@ -120,10 +117,10 @@ class SM(NeuralBaseTask):
                 token_list = [self.tokenizer.cls_token] + question_tokens + [self.tokenizer.sep_token]
                 len_question_token_list = len(token_list)
                 
-                if len(sentence_tokens) > self.max_seq_len - len_question_token_list:
-                    sentence_tokens = sentence_tokens[:self.max_seq_len - len_question_token_list]
+                if len(sentence_tokens) > self.config.max_seq_len - len_question_token_list:
+                    sentence_tokens = sentence_tokens[:self.config.max_seq_len - len_question_token_list - 1] + [self.tokenizer.sep_token]
                 else:
-                    sentence_tokens = sentence_tokens + [self.tokenizer.pad_token] * (self.max_seq_len - len_question_token_list - len(sentence_tokens))
+                    sentence_tokens = sentence_tokens + [self.tokenizer.sep_token] + [self.tokenizer.pad_token] * (self.config.max_seq_len - len_question_token_list - len(sentence_tokens) - 1)
                 
                 token_list = token_list + sentence_tokens
                 
@@ -133,19 +130,19 @@ class SM(NeuralBaseTask):
                 token_ids_list.append(token_ids)
                 token_type_ids_list.append(token_type_ids)
                 
-            token_tensor, token_type_ids_tensor = torch.tensor(token_ids_list), torch.tensor(token_type_ids_list)
-            attention_mask = (token_tensor != self.tokenizer.pad_token_id).float()
+            input_ids, token_type_ids = torch.tensor(token_ids_list), torch.tensor(token_type_ids_list)
+            attention_mask = (input_ids != self.tokenizer.pad_token_id).float()
             
-            self.model.to(self.device)
+            input_ids, token_type_ids, attention_mask = (
+                input_ids.to(self.device),
+                token_type_ids.to(self.device),
+                attention_mask.to(self.device)
+            )
             
-            token_tensor = token_tensor.to(self.device)
-            token_type_ids_tensor = token_type_ids_tensor.to(self.device)
-            attention_mask = attention_mask.to(self.device)
-                            
             outputs = self.model(
-                token_tensor, 
-                token_type_ids=token_type_ids_tensor,
-                attention_mask=(token_tensor != self.tokenizer.pad_token_id).float(),
+                input_ids=input_ids, 
+                token_type_ids=token_type_ids,
+                attention_mask=attention_mask,
                 labels=None,
             )
             
@@ -153,5 +150,5 @@ class SM(NeuralBaseTask):
             
             pred_label = torch.argmax(logits, dim=-1).tolist()[0]
             
-            return pred_label
+            return self.i2l[pred_label]
         

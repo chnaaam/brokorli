@@ -118,7 +118,9 @@ class KoRIA:
             res = task.predict(sentence=parameters["sentence"])
         elif task_name == "mrc":
             res = task.predict(sentence=parameters["sentence"], question=parameters["question"])
-
+        elif task_name == "sm":
+            res = task.predict(sentence=parameters["sentence"], question=parameters["question"])
+            
         print(res)
         
     def demo(self):
@@ -127,7 +129,7 @@ class KoRIA:
         for task_name in TASK_LIST.keys():
             task_cfg = get_config(cfg_path=self.cfg.path.config, cfg_fn=f"{task_name}.cfg")
             
-            if task_name in ["ner", "mrc"]:
+            if task_name in ["ner", "mrc", "sm"]:
                 tokenizer = TOKENIZER_LIST[task_cfg.model_name].from_pretrained(MODEL_NAME_LIST[task_cfg.model_name], use_fast=True)
                 task_config = TaskConfig(
                     task_name=task_name,

@@ -23,6 +23,14 @@ class DashboardServer:
         @self.app.route('/qg')
         def qg():
             return ""
+        
+        @self.app.route('/sm')
+        def sm():
+            if request.method == "GET":
+                sentence = request.args["sentence"]
+                question = request.args["question"]
+                
+                return jsonify({"answer": self.tasks["sm"].predict(sentence=sentence, question=question)})
 
     def run(self):
         self.app.run(host="localhost",port=5001)
