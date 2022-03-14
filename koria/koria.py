@@ -79,8 +79,7 @@ class KoRIA:
         )
         
         task = TASK_LIST[task_name](task_config=task_config)
-        # task.train()
-        task.valid()
+        task.train()
     
     def predict(self, task_name, **parameters):
         task_cfg = get_config(cfg_path=self.cfg.path.config, cfg_fn=f"{task_name}.cfg")
