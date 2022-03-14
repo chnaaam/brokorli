@@ -2,14 +2,12 @@
 date_of_birth:
     obj_types:
         - dt
-        - ti
     templates:
         - "{E}_이/가_ 태어난 날짜는?"
         - "{E}_이/가_ 태어난 날은?"
         - "{E}_이/가_ 태어난 날짜는 언제야?"
         - "{E}_이/가_ 태어난 날은 언제야?"
         - "{E}_은/는_ 언제 태어났어?"
-
 
 # 인물:출생_지역 - Object는 Subject가 태어난 지역
 place_of_birth:
@@ -19,12 +17,10 @@ place_of_birth:
         - "{E}_이/가_ 태어난 장소는?"
         - "{E}_은/는_ 어디서 태어났어?"
 
-
 # 인물:사망_일시 - Object는 Subject의 사망일
 date_of_death:
     obj_types:
         - dt
-        - ti
     templates:
         - "{E}_이/가_ 죽은 날짜는?"
         - "{E}_이/가_ 사망한 날는?"
@@ -57,7 +53,12 @@ origin:
         - og
         - lc
     templates:
-        - "{E}_이/가_"
+        - "{E}_이/가_ 살고 있는 나라는 어디야?"
+        - "{E}_이/가_ 거주하는 나라는 어디야?"
+        - "{E}의 국적은?"
+        - "{E}의 소속 국가는?"
+        - "{E}_이/가_ 태어난 나라는 어디야?"
+        - "{E}의 출생 국가는?"
 
 
 # 인물:소속단체 - Object는 Subject가 근무하는 기관
@@ -66,7 +67,12 @@ employee_of:
         - og
         - lc
     templates:
-        - "{E}_이/가_"
+        - "{E}_이/가_ 다니는 회사는 어디야?"
+        - "{E}_이/가_ 다니는 곳은 어디야?"
+        - "{E}_이/가_ 속한 단체는?"
+        - "{E}_이/가_ 속한 기관은?"
+        - "{E}의 소속 회사는 어디야?"
+        - "{E}의 소속 회사는 어디야?"
 
 
 # 인물:학교 - Object는 Subject가 다닌 학교
@@ -75,96 +81,86 @@ schools_attended:
         - og
         - lc
     templates:
-        - "{E}_이/가_"
+        - "{E}_이/가_ 다니는 학교는 어디야?"
+        - "{E}_이/가_ 다녔던 학교는 어디야?"
+        - "{E}_이/가_ 다니는 학교는?"
+        - "{E}_이/가_ 공부했던 곳은 어디야?"
+        - "{E}_이/가_ 공부 중인 곳은 어디야?"
+        - "{E}의 출신 학교는 어디야?"
 
 
 # 인물:별칭 - Object는 Subject의 또다른 이름
 alternate_names:
     obj_types:
-        - og
-        - lc
+        - ps
     templates:
-        - "{E}_이/가_"
+        - "{E}의 별명이 뭐야?"
+        - "{E}_를/을_ 뭐라고 불러?"
+        - "{E}의 별칭은?"
 
 
 # 인물:부모님 - Object는 Subject의 부모님
 parents:
     obj_types:
-        - og
-        - lc
+        - ps
     templates:
-        - "{E}_이/가_"
+        - "{E}의 부모님은 누구야?"
+        - "{E}의 부모는 누구야?"
+        - "{E}의 아버지는 누구야?"
+        - "{E}의 아빠는 누구야?"
+        - "{E}의 어머니는 누구야?"
+        - "{E}의 엄마는 누구야?"
+        - "{E}_은/는_ 누구한테 태어났어?"
+        - "{E}_은/는_ 누구한테 자랐어?"
+        - "{E}_은/는_ 누구 밑에서 자랐어?"
 
 
 # 인물:자녀 - Object는 Subject의 자녀
 children:
     obj_types:
-        - og
-        - lc
+        - ps
     templates:
-        - "{E}_이/가_"
+        - "{E}의 자식은 누구야?"
+        - "{E}의 아들은 누구야?"
+        - "{E}의 딸은 누구야?"
+        - "{E}_이/가_ 키우는 사람은 누구야?"
 
 
 # 인물:형제/자매/남매 - Object는 Subject의 형제 자매 남매
 siblings:
     obj_types:
-        - og
-        - lc
+        - ps
     templates:
-        - "{E}_이/가_"
+        - "{E}의 남매는 누구야?"
+        - "{E}의 형제는 누구야?"
+        - "{E}의 자매은 누구야?"
+        - "{E}의 누나는?"
+        - "{E}의 오빠는 누구야?"
+        - "{E}의 동생은 누구야?"
 
 
 # 인물:배우자 - Object는 Subject의 배우자
 siblings:
     obj_types:
-        - og
-        - lc
+        - ps
     templates:
-        - "{E}_이/가_"
+        - "{E}와 결혼한 사람은 누구야?"
+        - "{E}_와/과_ 부부인 사람은?"
 
 
 # 인물:기타_친족 - Object는 Subject의 기타 친족 (친척, 양자/녀 등)
 other_family:
     obj_types:
-        - og
-        - lc
+        - ps
     templates:
-        - "{E}_이/가_"
+        - "{E}의 친척, 사촌 또는 양자는 누구야?"
+        - "{E}의 가족은 아니지만 혈연 관계인 사람은?"
 
 
 # 인물:동료 - Object는 Subject의 동료
 colleagues:
     obj_types:
-        - og
-        - lc
+        - ps
     templates:
-        - "{E}_이/가_"
-
-
-# 인물:제작물 - Object는 Subject가 제작한 것
-product:
-    obj_types:
-        - og
-        - lc
-    templates:
-        - "{E}_이/가_"
-
-
-# 인물:종교 - Object는 Subject의 종교
-religion:
-    obj_types:
-        - og
-        - lc
-    templates:
-        - "{E}_이/가_"
-
-
-# 인물:직업/직함 - Object는 Subject의 직업/직함
-title:
-    obj_types:
-        - og
-        - lc
-    templates:
-        - "{E}_이/가_"
-
-
+        - "{E}의 친구는 누구야?"
+        - "{E}의 동료는 누구야?"
