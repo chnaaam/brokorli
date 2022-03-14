@@ -13,12 +13,12 @@ class RuleBasedTask(metaclass=ABCMeta):
         self.template_dir = parameters["template_dir"]
                 
         if self.cfg.template.path not in os.listdir(self.template_dir):
-            raise FileNotFoundError(f"Template directory is not existed in {os.path.abspath(os.path.join(self.rule_dir, self.cfg.template.path))}")
+            raise FileNotFoundError(f"Template directory is not existed in {os.path.abspath(os.path.join(self.template_dir, self.cfg.template.path))}")
         
         template_file_list = os.listdir(os.path.join(self.template_dir, self.cfg.template.path))
         
         if not template_file_list:
-            raise ValueError(f"Template files are not existed in {os.path.abspath(os.path.join(self.rule_dir, self.cfg.template.path))}")
+            raise ValueError(f"Template files are not existed in {os.path.abspath(os.path.join(self.template_dir, self.cfg.template.path))}")
         
         self.templates = dict()
         for template_fn in template_file_list:

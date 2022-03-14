@@ -9,6 +9,8 @@ class TaskConfig:
         model_name, 
         tokenizer,
         
+        train_mode = False,
+        
         train_data_loader=None, 
         valid_data_loader=None, 
         test_data_loader=None, 
@@ -19,6 +21,7 @@ class TaskConfig:
         use_cuda=False, 
         use_fp16=False):
         
+        self.train_mode = train_mode
         self.task_name = task_name
         self.model_name = model_name
         self.model_type = task_cfg.model_type

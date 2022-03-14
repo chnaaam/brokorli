@@ -41,6 +41,10 @@ class NeuralBaseTask(metaclass=ABCMeta):
         
         self.MODEL_PATH = self.config.task_name + ".e{0}.score{1:02.2f}" + f".lr{self.config.learning_rate}.len{self.config.max_seq_len}.mdl"
         self.previous_model_path = ""
+        
+        if not config.train_mode:
+            self.load_model(path=os.path.join(config.model_hub_path, f"{config.task_name}.mdl"))
+            self.model = self.model.to(self.device)
     
     def update_trained_model(self, model_name):
         if self.previous_model_path:

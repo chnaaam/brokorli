@@ -103,9 +103,6 @@ class NER(NeuralBaseTask):
         
         sentence = parameters["sentence"]
         
-        self.load_model(path=os.path.join(self.model_hub_path, "ner.mdl"))
-        self.model.eval()
-        
         with torch.no_grad():
             
             if type(sentence) == str:
@@ -118,10 +115,10 @@ class NER(NeuralBaseTask):
                 
                 token_list = [self.tokenizer.cls_token] + sentence_tokens + [self.tokenizer.sep_token]
                 
-                if len(token_list) > self.max_seq_len:
-                    token_list = token_list[:self.max_seq_len]
+                if len(token_list) > self.config.max_seq_len:
+                    token_list = token_list[:self.config.max_seq_len]
                 else:
-                    token_list = token_list + [self.tokenizer.pad_token] * (self.max_seq_len - len(sentence_tokens))
+                    token_list = token_list + [self.tokenizer.pad_token] * (self.config.max_seq_len - len(sentence_tokens))
                 
                 token_ids = self.tokenizer.convert_tokens_to_ids(token_list)
                 token_type_ids = [1] * len(token_list)
@@ -129,19 +126,18 @@ class NER(NeuralBaseTask):
                 token_ids_list.append(token_ids)
                 token_type_ids_list.append(token_type_ids)
                 
-            token_tensor, token_type_ids_tensor = torch.tensor(token_ids_list), torch.tensor(token_type_ids_list)
-                
-            attention_mask = (token_tensor != self.tokenizer.pad_token_id).float()
+            input_ids, token_type_ids = torch.tensor(token_ids_list), torch.tensor(token_type_ids_list)
+            attention_mask = (input_ids != self.tokenizer.pad_token_id).float()
             
-            self.model.to(self.device)
-            
-            token_tensor = token_tensor.to(self.device)
-            token_type_ids_tensor = token_type_ids_tensor.to(self.device)
-            attention_mask = attention_mask.to(self.device)
+            input_ids, token_type_ids, attention_mask = (
+                input_ids.to(self.device), 
+                token_type_ids.to(self.device),
+                attention_mask.to(self.device)
+            )
                             
             outputs = self.model(
-                token_tensor, 
-                token_type_ids=token_type_ids_tensor,
+                input_ids=input_ids, 
+                token_type_ids=token_type_ids,
                 attention_mask=attention_mask,
                 labels=None,
             )

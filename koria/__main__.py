@@ -34,10 +34,11 @@ if __name__ == "__main__":
     parser.add_argument("--cfg_path", type=str, default="./")
     parser.add_argument("--cfg_fn", type=str, default="koria.cfg")
     
-    parser.add_argument("--type", choices=["train", "predict", "cli"])
+    parser.add_argument("--type", choices=["train", "predict", "demo"])
     
     parser.add_argument("--task_name", type=str, default="qg", choices=["srl", "ner", "mrc", "sm", "qg"])
-    parser.add_argument("--topk", type=int, default=1)
+    parser.add_argument("--sentence", type=str, default="홍길동의 아버지는 홍판서이다.")
+    parser.add_argument("--question", type=str, default="홍길동의 아버지는 누구야?")
     
     args = parser.parse_args()
     
@@ -48,15 +49,16 @@ if __name__ == "__main__":
     
     koria = KoRIA(
         cfg_path=args.cfg_path, 
-        cfg_fn=args.cfg_fn
+        cfg_fn=args.cfg_fn,
+        run_type=args.type,
     )
     
     if args.type == "train":
         koria.train(task_name=args.task_name)
     elif args.type == "predict":
-        koria.predict(task_name=args.task_name)
-    elif args.type == "cli":
-        koria.cli()
+        koria.predict(task_name=args.task_name, sentence=args.sentence, question=args.question)
+    elif args.type == "demo":
+        koria.demo()
     else:
         raise NotImplementedError()
     
