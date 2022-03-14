@@ -32,7 +32,7 @@ class KoRIA:
         
     def train(self, task_name):
         
-        if task_name not in ["ner", "mrc"]:
+        if task_name not in ["ner", "mrc", "sm"]:
             raise ValueError("{task_name} task is not supported for training")
         
         logger.info(f"Task : {task_name}")

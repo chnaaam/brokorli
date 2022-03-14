@@ -13,6 +13,35 @@ class QG(RuleBasedTask):
     def is_registered_entity_type(self, type):
         return type.lower() in self.templates
    
+    def generate_true_question_using_rel_type(self, entity, type, rel):
+        type = type.lower()
+        template = self.templates[type][rel]
+        
+        questions = []
+        for template in template["templates"]:
+            questions.append(self.reconstruct_question(template, entity))
+        
+        return questions
+    
+    def generate_false_question_using_rel_type(self, entity, type, rel):
+        type = type.lower()
+        unselected_rel_list = list(self.templates[type].keys())
+        unselected_rel_list.remove(rel)
+        
+        import random
+        rel = random.choice(unselected_rel_list)
+        
+        template = self.templates[type][rel]
+        
+        questions = []
+        for template in template["templates"]:
+            questions.append(self.reconstruct_question(template, entity))
+        
+        return questions
+    
+    def get_rel_from_defined_templates(self, type):
+        return self.templates[type].keys()
+   
     def predict(self, **parameters):
         
         if "entity" not in parameters.keys() or "type" not in parameters.keys():
@@ -38,17 +67,18 @@ class QG(RuleBasedTask):
     
     def reconstruct_question(self, template, entity,):
         
-        candidate_josa = template.split("_")[1]
-        
-        # 1. 맨 뒷 글자가 한글인지 아닌지 판별
-        if self.is_hangul(entity[-1]):
-            # 2. 이 / 가, 은 / 는 구별
-            josa = Josa.get_josa(entity, candidate_josa.split("/")[0])
-        else:
-            # 2. 영어인 경우 앞에것을 임의로 선택
-            josa = candidate_josa[0]
+        if "_" in template:
+            candidate_josa = template.split("_")[1]
             
-        template = template.replace(f"_{candidate_josa}_", josa)
+            # 1. 맨 뒷 글자가 한글인지 아닌지 판별
+            if self.is_hangul(entity[-1]):
+                # 2. 이 / 가, 은 / 는 구별
+                josa = Josa.get_josa(entity, candidate_josa.split("/")[0])
+            else:
+                # 2. 영어인 경우 앞에것을 임의로 선택
+                josa = candidate_josa[0]
+                
+            template = template.replace(f"_{candidate_josa}_", josa)
         template = template.replace(self.ENTITY_TOKEN, entity)
         
         return template

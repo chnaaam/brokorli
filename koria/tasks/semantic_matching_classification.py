@@ -8,16 +8,15 @@ from koria.metrics import calculate_sc_score
 
 class SM(NeuralBaseTask):
 
-    def __init__(self, **parameters):
-                
-        # Set common parameters for TaskBase and build model
-        super().__init__(model_parameters=None, **parameters)
+    def __init__(self, task_config):
+        super().__init__(config=task_config)
         
     def train(self):
         max_score = 0
         
-        for epoch in range(int(self.cfg.parameters.epochs)):
+        for epoch in range(int(self.config.epochs)):
             self.model.train()
+            
             train_losses = []
             avg_train_loss = 0
             
@@ -25,19 +24,15 @@ class SM(NeuralBaseTask):
             for data in progress_bar:
                 progress_bar.set_description(f"[Training] Epoch : {epoch}, Avg Loss : {avg_train_loss:.4f}")
                 
-                token_tensor, token_type_ids_tensor, label_tensor = data
-                
-                token_tensor.to(self.device)
-                token_type_ids_tensor.to(self.device)
-                label_tensor.to(self.device)
+                input_ids, token_type_ids, attention_mask, label_ids = data
                 
                 self.optimizer.zero_grad()
                 
                 outputs = self.model(
-                    token_tensor, 
-                    token_type_ids=token_type_ids_tensor,
-                    attention_mask=(token_tensor != self.tokenizer.pad_token_id).float(),
-                    labels=label_tensor,
+                    input_ids=input_ids, 
+                    token_type_ids=token_type_ids,
+                    attention_mask=attention_mask,
+                    labels=label_ids,
                 )
                 
                 loss = outputs["loss"]
@@ -54,7 +49,8 @@ class SM(NeuralBaseTask):
             print(f"Epoch : {epoch}\tTrain Loss : {avg_train_loss:.4f}\tValid Loss : {avg_valid_loss:.4f}\tValid F1 Score : {avg_valid_f1_score * 100:.4f}\tAcc Score : {avg_valid_acc_score * 100:.4f}")
             
             if max_score < avg_valid_f1_score:
-                self.save_model(path=os.path.join(self.model_hub_path, f"mrc-e{epoch}-f1{avg_valid_f1_score * 100:.4f}-acc{avg_valid_acc_score * 100:.4f}-len{self.max_seq_len}.mdl"))
+                self.update_trained_model(self.MODEL_PATH.format(epoch, avg_valid_f1_score * 100))
+                max_score = avg_valid_f1_score
                 
     def valid(self):
         self.model.eval()
@@ -63,19 +59,24 @@ class SM(NeuralBaseTask):
             valid_losses, valid_f1_scores, valid_acc_scores = [], [], []
             avg_valid_loss, avg_valid_f1_score, avg_valid_acc_score = 0, 0, 0
             
-            progress_bar = tqdm(self.valid_data_loader)
+            progress_bar = tqdm(self.config.valid_data_loader)
             for data in progress_bar:
                 progress_bar.set_description(f"[Validation] Avg Loss : {avg_valid_loss:.4f} Avg Score : {avg_valid_f1_score * 100:.4f}")
                 
-                token_tensor, token_type_ids_tensor, label_tensor = data
-                if self.use_cuda:
-                    token_tensor, token_type_ids_tensor, label_tensor = token_tensor.cuda(), token_type_ids_tensor.cuda(), label_tensor.cuda()
+                input_ids, token_type_ids, attention_mask, label_ids = data
+                
+                input_ids, token_type_ids, attention_mask, label_ids = (
+                    input_ids.to(self.device),
+                    token_type_ids.to(self.device),
+                    attention_mask.to(self.device),
+                    label_ids.to(self.device)
+                )
                 
                 outputs = self.model(
-                    token_tensor, 
-                    token_type_ids=token_type_ids_tensor,
-                    attention_mask=(token_tensor != self.tokenizer.pad_token_id).float(),
-                    labels=label_tensor,
+                    input_ids=input_ids, 
+                    token_type_ids=token_type_ids,
+                    attention_mask=attention_mask,
+                    labels=label_ids,
                 )
                 
                 loss = outputs["loss"]
@@ -84,7 +85,7 @@ class SM(NeuralBaseTask):
                 valid_losses.append(loss.item())
                 
                 pred_tags = torch.argmax(logits, dim=-1)
-                score = calculate_sc_score(true_y=label_tensor.float().tolist(), pred_y=pred_tags.tolist())
+                score = calculate_sc_score(true_y=input_ids.float().tolist(), pred_y=pred_tags.tolist())
                 
                 
                 valid_f1_scores.append(score["f1"])
@@ -95,10 +96,7 @@ class SM(NeuralBaseTask):
                 avg_valid_acc_score = sum(valid_acc_scores) / len(valid_acc_scores)    
                 
             return avg_valid_loss, avg_valid_f1_score, avg_valid_acc_score
-    
-    def test(self):
-        pass
-    
+        
     def predict(self, **parameters):
         
         if "sentence" not in parameters.keys() or "question" not in parameters.keys():

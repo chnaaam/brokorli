@@ -19,7 +19,7 @@ TASK_LIST = {
     "ner": NER,
     "mrc": MRC,
     "qg": QG,
-    # "sm": SM
+    "sm": SM
 }
 
 OPTIMIZER_LIST = {
