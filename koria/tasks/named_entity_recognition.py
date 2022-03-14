@@ -51,6 +51,7 @@ class NER(NeuralBaseTask):
             
             if max_score < avg_valid_f1_score:
                 self.update_trained_model(self.MODEL_PATH.format(epoch, avg_valid_f1_score * 100))
+                max_score = avg_valid_f1_score
                 
     def valid(self):
         self.model.eval()
@@ -94,9 +95,6 @@ class NER(NeuralBaseTask):
                 avg_valid_f1_score = sum(valid_f1_scores) / len(valid_f1_scores)
             
             return avg_valid_loss, avg_valid_f1_score
-    
-    def test(self):
-        pass
     
     def predict(self, **parameters):
         

@@ -66,9 +66,5 @@ class NeuralBaseTask(metaclass=ABCMeta):
         pass
             
     @abstractmethod
-    def test(self):
-        pass
-            
-    @abstractmethod
     def predict(self, **parameters):
         pass
