@@ -34,7 +34,7 @@ if __name__ == "__main__":
     parser.add_argument("--cfg_path", type=str, default="./")
     parser.add_argument("--cfg_fn", type=str, default="koria.cfg")
     
-    parser.add_argument("--type", choices=["train", "predict", "demo"])
+    parser.add_argument("--type", choices=["train", "predict", "task_demo", "cli"])
     
     parser.add_argument("--task_name", type=str, default="qg", choices=["srl", "ner", "mrc", "sm", "qg"])
     parser.add_argument("--sentence", type=str, default="홍길동의 아버지는 홍판서이다.")
@@ -57,8 +57,10 @@ if __name__ == "__main__":
         koria.train(task_name=args.task_name)
     elif args.type == "predict":
         koria.predict(task_name=args.task_name, sentence=args.sentence, question=args.question)
-    elif args.type == "demo":
-        koria.demo()
+    elif args.type == "task_demo":
+        koria.task_demo()
+    elif args.type == "cli":
+        koria.cli()
     else:
         raise NotImplementedError()
     

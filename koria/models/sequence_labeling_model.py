@@ -1,21 +1,13 @@
 import torch.nn as nn
 
-from transformers import AutoConfig, AutoModelForTokenClassification
+from transformers import AutoModelForTokenClassification
 
 class SequenceLabelingModel(nn.Module):
     def __init__(self, model_name, num_labels=None, vocab_size=None):
         super().__init__()
         
         self.model_name = model_name
-        config = AutoConfig.from_pretrained(model_name)
-        
-        if num_labels:
-            config.num_labels = num_labels    
-        
-        self.model = AutoModelForTokenClassification.from_config(config)
-        
-        if vocab_size:
-            self.model.resize_token_embeddings(vocab_size)
+        self.model = AutoModelForTokenClassification.from_pretrained(model_name, num_labels=num_labels)
         
     def forward(self, **parameters):
         input_ids = parameters["input_ids"]

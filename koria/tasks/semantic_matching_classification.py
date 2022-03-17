@@ -1,5 +1,5 @@
-import os
 import torch
+import torch.functional as F
 from tqdm import tqdm
 
 from .neural_based_task import NeuralBaseTask
@@ -148,7 +148,7 @@ class SM(NeuralBaseTask):
             
             logits = outputs["logits"]
             
-            pred_label = torch.argmax(logits, dim=-1).tolist()[0]
+            pred_label = torch.argmax(logits, dim=-1).tolist()
             
-            return self.i2l[pred_label]
+            return [self.i2l[label] for label in pred_label]
         

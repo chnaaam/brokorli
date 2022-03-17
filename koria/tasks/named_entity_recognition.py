@@ -108,31 +108,35 @@ class NER(NeuralBaseTask):
             if type(sentence) == str:
                 sentence = [sentence]
                 
-            sent_len_list, token_ids_list, token_type_ids_list = [], [], []
-            for sent in sentence:
-                sentence_tokens = self.tokenizer.tokenize(sent)
-                sent_len_list.append(len(sentence_tokens))
+            # sent_len_list, token_ids_list, token_type_ids_list = [], [], []
+            # for sent in sentence:
+            #     offsets = self.tokenizer(sentence, return_offsets_mapping=True)["offset_mapping"]
+            #     sentence_tokens = self.tokenizer.tokenize(sent)
+            #     sent_len_list.append(len(sentence_tokens))
                 
-                token_list = [self.tokenizer.cls_token] + sentence_tokens + [self.tokenizer.sep_token]
+            #     token_list = [self.tokenizer.cls_token] + sentence_tokens + [self.tokenizer.sep_token]
+            #     token_type_ids = [1] * len(token_list)
                 
-                if len(token_list) > self.config.max_seq_len:
-                    token_list = token_list[:self.config.max_seq_len]
-                else:
-                    token_list = token_list + [self.tokenizer.pad_token] * (self.config.max_seq_len - len(sentence_tokens))
+            #     if len(token_list) > self.config.max_seq_len:
+            #         token_list = token_list[:self.config.max_seq_len]
+            #         token_type_ids = token_type_ids[:self.config.max_seq_len]
+            #     else:
+            #         token_list = token_list + [self.tokenizer.pad_token] * (self.config.max_seq_len - len(token_list))
+            #         token_type_ids += [0] * (self.config.max_seq_len - len(token_type_ids))
                 
-                token_ids = self.tokenizer.convert_tokens_to_ids(token_list)
-                token_type_ids = [1] * len(token_list)
+            #     token_ids = self.tokenizer.convert_tokens_to_ids(token_list)
                 
-                token_ids_list.append(token_ids)
-                token_type_ids_list.append(token_type_ids)
+            #     token_ids_list.append(token_ids)
+            #     token_type_ids_list.append(token_type_ids)
                 
-            input_ids, token_type_ids = torch.tensor(token_ids_list), torch.tensor(token_type_ids_list)
-            attention_mask = (input_ids != self.tokenizer.pad_token_id).float()
+            # input_ids, token_type_ids = torch.tensor(token_ids_list), torch.tensor(token_type_ids_list)
+            # attention_mask = (input_ids != self.tokenizer.pad_token_id).float()
+            tokenized = self.tokenizer(sentence, return_offsets_mapping=True)
             
             input_ids, token_type_ids, attention_mask = (
-                input_ids.to(self.device), 
-                token_type_ids.to(self.device),
-                attention_mask.to(self.device)
+                torch.tensor(tokenized["input_ids"]).to(self.device), 
+                torch.tensor(tokenized["token_type_ids"]).to(self.device),
+                torch.tensor(tokenized["attention_mask"]).to(self.device)
             )
                             
             outputs = self.model(
@@ -144,9 +148,13 @@ class NER(NeuralBaseTask):
             
             entities_list = []
             for idx, output in enumerate(outputs["logits"]):
-                label_list = [self.i2l[tag] for tag in torch.argmax(output, dim=-1).tolist()[1:sent_len_list[idx]]]
-                entities_list.append(self.label2entity(token_list=token_list[1:], label_list=label_list))
-                        
+                entities = self.label2entity(
+                    label_list=[self.i2l[tag] for tag in torch.argmax(output, dim=-1).tolist()], 
+                    offset_mapping=tokenized["offset_mapping"][idx]
+                )
+                
+                entities_list.append(entities)
+                
             return entities_list
         
     def decode(self, labels, pred_tags):
@@ -169,9 +177,11 @@ class NER(NeuralBaseTask):
 
         return true_y_list, pred_y_list
     
-    def label2entity(self, token_list, label_list):
+    def label2entity(self, label_list, offset_mapping):
         entities = []
         entity_buffer = []
+        start_idx, end_idx = 0, 0
+        
         for idx, label in enumerate(label_list):
             if label == LABEL_PAD_TOKEN:
                 break
@@ -181,20 +191,24 @@ class NER(NeuralBaseTask):
             
             if label.startswith("S-"):
                 entities.append({
-                    "entity": token_list[idx],
-                    "label": label[2:]
+                    "label": label[2:],
+                    "start_idx": offset_mapping[idx][0],
+                    "end_idx": offset_mapping[idx][1] - 1,
                 })
             
-            elif label.startswith("B-") or label.startswith("I-"):
-                entity_buffer.append(token_list[idx])
+            elif label.startswith("B-") or label.startswith("I-"):                
+                if label.startswith("B-"):
+                    start_idx = offset_mapping[idx][0]
+                    
             elif label.startswith("E-"):
-                entity_buffer.append(token_list[idx])
+                end_idx = offset_mapping[idx][1]
+                
                 entities.append({
-                    "entity": self.tokenizer.convert_tokens_to_string(entity_buffer),
-                    "label": label[2:]
+                    "label": label[2:],
+                    "start_idx": start_idx,
+                    "end_idx": end_idx - 1
                 })
                 
                 entity_buffer.clear()
                 
         return entities
-    

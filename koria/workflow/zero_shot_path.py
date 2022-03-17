@@ -15,6 +15,7 @@ class ZeroShotPath(PathBase):
     
     def __init__(self, tasks):
         self.qg_task = tasks["qg"]
+        self.sm_task = tasks["sm"]
         self.mrc_task = tasks["mrc"]
         
     def run(self, **parameters):
@@ -35,23 +36,43 @@ class ZeroShotPath(PathBase):
             
             questions = self.qg_task.predict(entity=subj, type=subj_type)
             
-            for relation, question_info in questions.items():
-                counted_answer = Counter(self.mrc_task.predict(sentence=sentence, question=question_info["questions"]))
-                answer = counted_answer.most_common(1)[0][0]
+            for relation, question_list in questions.items():
+                results = self.sm_task.predict(sentence=sentence, question=question_list["questions"])
                 
-                for obj_idx, obj_info in enumerate(entities):
-                    if subj_idx == obj_idx:
+                true_questions = []
+                for idx, result in enumerate(results):
+                    if result:
+                        true_questions.append(question_list["questions"][idx])
+                
+                if not true_questions:
+                    continue
+                
+                pred_answers = self.mrc_task.predict(sentence=sentence, question=true_questions)
+                answers = []
+                
+                for pred_answer in pred_answers:
+                    if not pred_answer or pred_answer.startswith("##"):
                         continue
                     
-                    obj = obj_info["entity"]
-                    obj_type = obj_info["label"].lower()
-            
-                    if (answer in obj or obj in answer) and obj_type in question_info["obj_types"]:
-                        if obj and answer:
-                            triple_list.append((subj, relation, min(answer, obj, key=len)))
-                        elif obj:
-                            triple_list.append((subj, relation, obj))
-                        else:
-                            triple_list.append((subj, relation, answer))
+                    for obj_idx, obj_info in enumerate(entities):
+                        if subj_idx == obj_idx:
+                            continue
+                        
+                        obj = obj_info["entity"]
+                        obj_type = obj_info["label"].lower()
+
+                        if not obj:
+                            continue
+                        
+                        if (pred_answer in obj or obj in pred_answer) and obj_type in question_list["obj_types"]:
+                            if pred_answer == obj:
+                                answers.append(pred_answer)
+                            else:
+                                answers.append(min(pred_answer, obj, key=len))
+                
+                if answers:
+                    answer = Counter(answers).most_common(1)[0][0]
+                    
+                    triple_list.append((subj, relation, answer))
         
         return triple_list

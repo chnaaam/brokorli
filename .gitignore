@@ -9,7 +9,10 @@ data/
 venv/
 model/
 hub/
+
 !koria/data_loaders/data
 test.py
 task_performance.txt
 semantic_matching_dataset_generation.py
+
+1. wikipedia ner.py

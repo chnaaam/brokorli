@@ -18,7 +18,7 @@ from .dashboard import Dashboard
 
 class KoRIA:
     
-    def __init__(self, cfg_path, cfg_fn, run_type):
+    def __init__(self, cfg_path="../", cfg_fn="koria.cfg", run_type="predict"):
         self.run_type = run_type
         
         if not is_existed_file(os.path.join(cfg_path, cfg_fn)):
@@ -121,9 +121,9 @@ class KoRIA:
         elif task_name == "sm":
             res = task.predict(sentence=parameters["sentence"], question=parameters["question"])
             
-        print(res)
+        return res
         
-    def demo(self):
+    def task_demo(self):
         tasks = {}
         
         for task_name in TASK_LIST.keys():
@@ -157,3 +157,38 @@ class KoRIA:
             
         dashboard = Dashboard(tasks=tasks)
         dashboard.run()
+        
+    def cli(self):
+        tasks = {}
+        
+        for task_name in TASK_LIST.keys():
+            task_cfg = get_config(cfg_path=self.cfg.path.config, cfg_fn=f"{task_name}.cfg")
+            
+            if task_name in ["ner", "mrc", "sm"]:
+                tokenizer = TOKENIZER_LIST[task_cfg.model_name].from_pretrained(MODEL_NAME_LIST[task_cfg.model_name], use_fast=True)
+                task_config = TaskConfig(
+                    task_name=task_name,
+                    task_cfg=task_cfg,
+                    model_name=MODEL_NAME_LIST[task_cfg.model_name], 
+                    tokenizer=tokenizer,
+                    train_mode=True if self.run_type == "train" else False,
+                    train_data_loader=None, 
+                    valid_data_loader=None, 
+                    test_data_loader=None, 
+                    model_hub_path=os.path.join(self.cfg.path.root, self.cfg.path.model),
+                    label_hub_path=os.path.join(self.cfg.path.root, self.cfg.path.label),
+                    use_cuda=self.cfg.use_cuda,
+                    use_fp16=self.cfg.use_fp16
+                )
+                
+                tasks.setdefault(task_name, TASK_LIST[task_name](task_config=task_config))
+            else:
+                task = TASK_LIST[task_name](
+                    cfg=task_cfg,
+                    template_dir=self.cfg.path.template
+                )
+                
+                tasks.setdefault(task_name, task)
+            
+        workflow = Workflow(tasks=tasks)
+        workflow.cli()
