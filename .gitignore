@@ -15,4 +15,5 @@ test.py
 task_performance.txt
 semantic_matching_dataset_generation.py
 
-1. wikipedia ner.py
+1_wikipedia_filtering.py
+2_wikipedia_ner.py
