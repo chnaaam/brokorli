@@ -15,5 +15,9 @@ test.py
 task_performance.txt
 semantic_matching_dataset_generation.py
 
-1_wikipedia_filtering.py
-2_wikipedia_ner.py
+brokorli_mrc/
+brokorli_ner/
+brokorli_sm/
+examples/
+test/
+config/
