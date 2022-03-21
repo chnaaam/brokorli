@@ -116,7 +116,9 @@ class BrokorliUnit:
         test_batch_size=4,
         train_num_workers=0,
         test_num_workers=0,
-        model_hub_path="./model"):
+        model_hub_path="./model",
+        use_cuda=True, 
+        use_fp16=True):
         
         return cls(
             task_name=task_name,
@@ -135,6 +137,8 @@ class BrokorliUnit:
             train_num_workers=train_num_workers,
             test_num_workers=test_num_workers,
             model_hub_path=model_hub_path,
+            use_cuda=use_cuda, 
+            use_fp16=use_fp16
         )
     
         
