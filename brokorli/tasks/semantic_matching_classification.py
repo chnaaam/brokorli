@@ -59,7 +59,7 @@ class SM(NeuralBaseTask):
             valid_losses, valid_f1_scores, valid_acc_scores = [], [], []
             avg_valid_loss, avg_valid_f1_score, avg_valid_acc_score = 0, 0, 0
             
-            progress_bar = tqdm(self.config.valid_data_loader)
+            progress_bar = tqdm(self.config.test_data_loader)
             for data in progress_bar:
                 progress_bar.set_description(f"[Validation] Avg Loss : {avg_valid_loss:.4f} Avg Score : {avg_valid_f1_score * 100:.4f}")
                 
