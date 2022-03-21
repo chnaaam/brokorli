@@ -25,8 +25,8 @@ class BrokorliUnit:
         train_num_workers=0,
         test_num_workers=0,
         model_hub_path="./model",
-        use_cuda=False, 
-        use_fp16=False
+        use_cuda=True, 
+        use_fp16=True
     ):
         self.task_name = task_name
         
