@@ -2,7 +2,7 @@ import os
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
 from .utils import *
-from .data_loaders import load_data_loader
+from .dataloaders import load_data_loader
 from .tasks import TASK_LIST, TaskConfig
 
 
@@ -32,6 +32,7 @@ class BrokorliUnit:
         
         if run_type == "predict":
             self.task_config = TaskConfig(
+                run_type=run_type,
                 task_name=task_name,
                 max_seq_len=max_seq_len,
                 use_cuda=use_cuda,
@@ -44,6 +45,7 @@ class BrokorliUnit:
                 raise ValueError("{task_name} task is not supported for training")
             
             self.task_config = TaskConfig(
+                run_type=run_type,
                 task_name=task_name,
                 pretrained_model_name=pretrained_model_name,
                 max_seq_len=max_seq_len,
@@ -75,12 +77,23 @@ class BrokorliUnit:
     def predict(self, **parameters):
         if self.task_name == "ner":
             res = self.task.predict(sentence=parameters["sentence"])
+            
         elif self.task_name == "mrc":
-            res = self.task.predict(sentence=parameters["sentence"], question=parameters["question"])
+            res = self.task.predict(
+                sentence=parameters["sentence"], 
+                question=parameters["question"])
+            
         elif self.task_name == "sm":
-            res = self.task.predict(sentence=parameters["sentence"], question=parameters["question"])
+            res = self.task.predict(
+                sentence=parameters["sentence"], 
+                question=parameters["question"])
+            
         elif self.task_name == "qg":
-            res = self.task.predict(entity=parameters["entity"], type=parameters["type"])
+            res = self.task.predict(
+                entity=parameters["entity"], 
+                entity_type=parameters["entity_type"], 
+                with_entity_marker=parameters["with_entity_marker"] if "with_entity_marker" in parameters else "")
+            
         else:
             raise NotImplementedError()
         

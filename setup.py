@@ -9,7 +9,7 @@ setup(
     description="",
     author="brokorli",
     packages=find_packages(),
-    # include_package_data=True,
+    include_package_data=True,
     install_requires=requirements,
     zip_safe=False
 )

@@ -18,7 +18,7 @@ class ZeroShotPath(PathBase):
             if not self.qg_task.task.is_registered_entity_type(subj_type):
                 continue
             
-            questions = self.qg_task.predict(entity=subj, type=subj_type)
+            questions = self.qg_task.predict(entity=subj, entity_type=subj_type)
             
             for relation, question_list in questions.items():
                 results = self.sm_task.predict(sentence=sentence, question=question_list["questions"])

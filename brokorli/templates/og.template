@@ -8,6 +8,8 @@ founded:
         - "{E}_은/는_ 언제 설립되었나요?"
         - "{E}의 창립일은 언제인가요?"
         - "{E}의 창업 일자는?"
+        - "{E}_이/가_ 설립된 날짜는?"
+        - "{E}_이/가_ 설립된 날은?"
 
 dissolved:
     obj_types:
@@ -26,6 +28,7 @@ place_of_headquarters:
         - "{E}_은/는_ 어디에 있나요?"
         - "{E}의 위치는?"
         - "{E}의 본사는 어디야?"
+        - "{E}_이/가_ 있는 곳은?"
 
 alternate_names:
     obj_types:
@@ -33,6 +36,7 @@ alternate_names:
     templates:
         - "{E}_은/는_ 다른 말로 뭐라고 부르나요?"
         - "{E}의 다른 말은?"
+        - "{E}의 별명은 뭐야?"
 
 founded_by:
     obj_types:
@@ -51,4 +55,3 @@ top_members/employees:
         - "{E}에 속한 사람은?"
         - "{E}의 구성원은 누구야?"
         - "{E}의 대표는?"
-

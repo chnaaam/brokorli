@@ -14,32 +14,26 @@ class QG(RuleBasedTask):
         return type.lower() in self.templates
    
     def get_rel_from_defined_templates(self, type):
-        return self.templates[type].keys()
+        return list(self.templates[type].keys())
    
-    def predict(self, **parameters):
-        
-        if "entity" not in parameters.keys() or "type" not in parameters.keys():
-            raise KeyError("The question generation task must need entity name and type parameters")
-        
-        entity = parameters["entity"]
-        type = parameters["type"].lower()
-        
-        if type not in self.templates.keys():
-            raise KeyError(f"{type} is not defined in rule files")
-        
-        templates = self.templates[type]
-        
+    def predict(self, entity, entity_type, with_entity_marker=""):
         questions = dict()
+        entity_type = entity_type.lower()
+        
+        if entity_type not in self.templates.keys():
+            return questions
+        
+        templates = self.templates[entity_type]
         
         for relation, template in templates.items():
             questions.setdefault(relation, {"obj_types": template["obj_types"], "questions": []})
             
             for template in template["templates"]:
-                questions[relation]["questions"].append(self.reconstruct_question(template, entity))
+                questions[relation]["questions"].append(self.reconstruct_question(template, entity, with_entity_marker))
         
         return questions
     
-    def reconstruct_question(self, template, entity,):
+    def reconstruct_question(self, template, entity, with_entity_marker):
         
         if "_" in template:
             candidate_josa = template.split("_")[1]
@@ -53,9 +47,8 @@ class QG(RuleBasedTask):
                 josa = candidate_josa[0]
                 
             template = template.replace(f"_{candidate_josa}_", josa)
-        template = template.replace(self.ENTITY_TOKEN, entity)
-        
-        return template
+            
+        return template.replace(self.ENTITY_TOKEN, f"{with_entity_marker}{entity}{with_entity_marker}")
            
     def is_hangul(self, c):
         if ord('가') <= ord(c) <= ord('힣'):
