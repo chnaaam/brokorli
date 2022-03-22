@@ -1,4 +1,3 @@
-from .tasks import TASK_LIST
 from .brokorli_unit import BrokorliUnit
 from .dashboard import Dashboard
 from .workflow import Workflow
@@ -26,8 +25,8 @@ class Brokorli:
         
         self.workflow = Workflow(tasks=self.tasks)
         
-    def __call__(self, sentence, mrc_threshold=0.9):
-        return self.workflow.run(sentence, mrc_threshold)
+    def __call__(self, sentence, sm_batch_size=4, mrc_batch_size=4, mrc_threshold=0.9):
+        return self.workflow.run(sentence, sm_batch_size=sm_batch_size, mrc_batch_size=mrc_batch_size, mrc_threshold=mrc_threshold)
     
     def available_tasks(self):
         return list(self.TASKS.values())
