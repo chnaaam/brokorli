@@ -1,5 +1,5 @@
 import torch
-import torch.functional as F
+import torch.nn.functional as F
 from tqdm import tqdm
 
 from .neural_based_task import NeuralBaseTask
@@ -121,9 +121,10 @@ class SM(NeuralBaseTask):
                 labels=None,
             )
             
-            logits = outputs["logits"]
+            logits = F.softmax(outputs["logits"], dim=-1)
             
             pred_label = torch.argmax(logits, dim=-1).tolist()
+            scores = logits.tolist()
             
-            return [self.i2l[label] for label in pred_label]
+            return [{"confidence_score": scores[idx][label], "label": self.i2l[label]} for idx, label in enumerate(pred_label)]
         

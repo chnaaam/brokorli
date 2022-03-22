@@ -30,7 +30,6 @@ date_of_death:
         - "{E}_은/는_ 언제 죽었어?"
         - "언제 {E}_이/가_ 죽었어?"
         
-
 # 인물:사망_지역 - Object는 Subject가 사망한 지역
 place_of_death:
     obj_types:
