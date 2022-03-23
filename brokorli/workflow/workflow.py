@@ -7,8 +7,8 @@ class Workflow:
         self.qg_task = tasks["qg"]
         self.sm_task = tasks["sm"]
         self.mrc_task = tasks["mrc"]
-        
-    def run(self, sentences, sm_batch_size=4, sm_threshold=0.99, mrc_batch_size=4, mrc_threshold=0.9):
+    
+    def run(self, sentences, sm_batch_size=4, sm_threshold=0.99, mrc_batch_size=4, mrc_threshold=0.98):
         sentences = sentences if type(sentences) == list else [sentences]
                 
         batched_entities = self.recognize_ne(sentences=sentences)
@@ -28,6 +28,9 @@ class Workflow:
         sentence_question_pairs = []
         
         for idx, (sentence, entity_list) in enumerate(zip(sentences, entities)):
+            
+            available_entity_type = set([entity["label"].lower() for entity in entity_list])
+            
             for entity in entity_list:
                 entity_start_idx, entity_end_idx = entity["start_idx"], entity["end_idx"]
                 named_entity = sentence[entity_start_idx: entity_end_idx + 1]
@@ -35,6 +38,11 @@ class Workflow:
                 
                 if self.qg_task.task.is_registered_entity_type(entity_type):
                     for relation, question_list in self.qg_task.predict(entity=named_entity, entity_type=entity_type).items():
+                        
+                        obj_types = set(question_list["obj_types"])
+                        if len(obj_types - available_entity_type) == len(obj_types):
+                            continue
+                        
                         for question in question_list["questions"]:
                             sentence_question_pairs.append((idx, sentence, question, named_entity, relation, question_list["obj_types"]))
                             
