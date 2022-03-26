@@ -4,16 +4,7 @@ import random
 import argparse
 import logging
 
-logger = logging.getLogger("koria")
-
 from brokorli import KoRIA
-
-def init_logger():
-    logging.basicConfig(
-        level=logging.INFO,
-        format='[%(asctime)s|%(levelname)s] > %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S',
-    )
     
 def fix_torch_seed(random_seed=42):
     torch.manual_seed(random_seed)
@@ -33,17 +24,12 @@ if __name__ == "__main__":
     
     parser.add_argument("--cfg_path", type=str, default="./")
     parser.add_argument("--cfg_fn", type=str, default="koria.cfg")
-    
     parser.add_argument("--type", choices=["train", "task_demo", "cli"])
-    
     parser.add_argument("--task_name", type=str, default="qg", choices=["srl", "ner", "mrc", "sm", "qg"])
     
     args = parser.parse_args()
     
-    init_logger()
     fix_torch_seed()
-    
-    logger.info("KoRIA package")
     
     koria = KoRIA(
         cfg_path=args.cfg_path, 
