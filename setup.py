@@ -1,7 +1,9 @@
 from setuptools import setup, find_packages
 
-with open("requirements.txt") as f:
-    requirements = f.readlines()
+requirements = []
+with open("requirements.txt") as fp:
+    for requirement in fp.readlines():
+        requirements.append(requirement)
 
 setup(
     name="brokorli",
