@@ -1,6 +1,3 @@
-from numpy import extract
-
-
 class Workflow:
     def __init__(self, tasks):
         self.ner_task = tasks["ner"]
