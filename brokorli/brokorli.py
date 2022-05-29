@@ -8,7 +8,7 @@ class Brokorli:
         "ner": "named entity recognition",
         "mrc": "machine reading comprehension",
         "qg": "question generation",
-        "sm": "sentence and question semantic matching classificaiton"
+        "sm": "sentence and question semantic matching classification"
     }
     
     def __init__(self, additional_templates=None):
